@@ -46,17 +46,20 @@ flags.DEFINE_string(
     'blacklist',
     '/mnt/disks/ssd/pixelscore_service/within_collection_score/blacklist_1.csv',
     'Path to .csv file with blacklist of collection_id')
-
 flags.DEFINE_string(
     'mode',
     'is_pre_reveal',
     'Mode to run preprocessing')
+flags.DEFINE_string(
+    'code_path',
+    '/mnt/disks/ssd/git/pixelscore_service',
+    'Root oath to project with code')
 
 def run_process(collection_id, base_dir):
     """Single process run of img to numpy function."""
     print('Converting collection {}'.format(collection_id))
     try:
-        os.system('python3 /mnt/disks/ssd/pixelscore_service/preprocessing/preprocess_lib.py --collection_id={} --base_dir={} --mode="is_pre_reveal"'.format(collection_id, base_dir))
+        os.system('python3 {}/pixelscore_service/preprocessing/preprocess_lib.py --collection_id={} --base_dir={} --mode="is_pre_reveal"'.format(FLAGS.code_path, collection_id, base_dir))
     except:
         print('Unable to compute pixelscores for collection {}, trying next one'.format(collection_id))
     return True
@@ -65,7 +68,7 @@ def run_process_is_empty(collection_id, base_dir):
     """Single process run of img to numpy function."""
     print('Converting collection {}'.format(collection_id))
     try:
-        os.system('python3 /mnt/disks/ssd/pixelscore_service/preprocessing/preprocess_lib.py --collection_id={} --base_dir={} --mode="is_empty"'.format(collection_id, base_dir))
+        os.system('python3 {}/pixelscore_service/preprocessing/preprocess_lib.py --collection_id={} --base_dir={} --mode="is_empty"'.format(FLAGS.code_path, collection_id, base_dir))
     except:
         print('Unable to compute pixelscores for collection {}, trying next one'.format(collection_id))
     return True
@@ -89,7 +92,7 @@ def main(argv):
     #print(whitelist)
     # Scores hist mode is single thresded.
     if FLAGS.mode == 'scores_hist':
-        os.system('python3 /mnt/disks/ssd/pixelscore_service/preprocessing/preprocess_lib.py --base_dir={} --mode="scores_hist"'.format(base_dir))
+        os.system('python3 {}/pixelscore_service/preprocessing/preprocess_lib.py --base_dir={} --mode="scores_hist"'.format(FLAGS.code_path, base_dir))
     # Define parallel execution.
     pool = mp.Pool(mp.cpu_count())
     if FLAGS.mode == 'is_pre_reveal':

@@ -62,10 +62,10 @@ N_BINS_G = 10
 N_BINS_B = 10
 
 # Hardcoded hist edges.
-EDGES = [np.array([  0. ,  25.5,  51. ,  76.5, 102. , 127.5, 153. , 178.5, 204. ,
-       229.5, 255. ]), np.array([  0. ,  25.5,  51. ,  76.5, 102. , 127.5, 153. , 178.5, 204. ,
-       229.5, 255. ]), np.array([  0. ,  25.5,  51. ,  76.5, 102. , 127.5, 153. , 178.5, 204. ,
-       229.5, 255. ])]
+EDGES = [np.array([0.,  25.5,  51.,  76.5, 102., 127.5, 153., 178.5, 204.,
+                   229.5, 255.]), np.array([0.,  25.5,  51.,  76.5, 102., 127.5, 153., 178.5, 204.,
+                                            229.5, 255.]), np.array([0.,  25.5,  51.,  76.5, 102., 127.5, 153., 178.5, 204.,
+                                                                     229.5, 255.])]
 
 flags.DEFINE_string(
     'collection_id',
@@ -101,16 +101,19 @@ flags.DEFINE_string(
     'Raw logs.')
 
 # Initialize global hist
-GLOBAL_HIST = np.load('/mnt/disks/additional-disk/global_hist/global_hist.npz')['arr_0']
+GLOBAL_HIST = np.load(
+    '/mnt/disks/additional-disk/global_hist/global_hist.npz')['arr_0']
 
-#Global smallest pixel count
+# Global smallest pixel count
 MIN_PIXEL_COUNT = np.min(GLOBAL_HIST[np.nonzero(GLOBAL_HIST)])
+
 
 def get_global_hist(i, j):
     """Quick get global hist."""
     index = i + IMG_HEIGHT + j
-    hist = GLOBAL_HIST[index, :,:,:]
+    hist = GLOBAL_HIST[index, :, :, :]
     return hist
+
 
 def update_results(results_file, stats_dict):
     """Update results file with stats - by colleciton id.
@@ -130,7 +133,8 @@ def update_results(results_file, stats_dict):
         return True
     if stats_dict['collection_id'] in df_base['collection_id'].values:
         for key, value in stats_dict.items():
-            df_base.loc[df_base.collection_id == stats_dict['collection_id'],key] = value
+            df_base.loc[df_base.collection_id ==
+                        stats_dict['collection_id'], key] = value
     else:
         stats_dict_fordf = dict()
         for key, value in stats_dict.items():
@@ -139,26 +143,29 @@ def update_results(results_file, stats_dict):
         df_base = pd.concat([df_base, df_update])
     print('DF results updated')
     print(df_base)
-    df_base.to_csv(results_file, columns = [
+    df_base.to_csv(results_file, columns=[
         'collection_id',
         'corr_rarityScore',
         'corr_rarityRank'])
     # Also fluch raw log as filename
     return True
 
+
 def rename_columns(df):
     """Rename and reorder columns in the output pixelscore df."""
     df.rename(columns={
-        'id':'tokenId',
-        'rarityScore':'rarityScore',
-        'rarityRank':'rarityRank',
-        'PixelScore':'pixelScore',
-        'PixelScoreRank':'pixelScoreRank',
-        'url':'imageUrl',
-        'collectionAddress':'collectionAddress'
-        },inplace=True)
-    df = df[['collectionAddress','tokenId','pixelScore','pixelScoreRank','rarityScore','rarityRank','imageUrl']]
+        'id': 'tokenId',
+        'rarityScore': 'rarityScore',
+        'rarityRank': 'rarityRank',
+        'PixelScore': 'pixelScore',
+        'PixelScoreRank': 'pixelScoreRank',
+        'url': 'imageUrl',
+        'collectionAddress': 'collectionAddress'
+    }, inplace=True)
+    df = df[['collectionAddress', 'tokenId', 'pixelScore',
+             'pixelScoreRank', 'rarityScore', 'rarityRank', 'imageUrl']]
     return df
+
 
 def load_collection_numpy(base_dir, collection_id):
     """Loads nft collection pixels as archived numpy array.
@@ -201,7 +208,7 @@ def save_collection_numpy(base_dir, collection_id, X_train):
     return True
 
 
-def save_collection_scores(base_dir, collection_id, results_file, df, global_score = True):
+def save_collection_scores(base_dir, collection_id, results_file, df, global_score=True):
     """Saves pixel scores for the given collection in .csv.
 
     Args:
@@ -221,17 +228,17 @@ def save_collection_scores(base_dir, collection_id, results_file, df, global_sco
     else:
         filename_score = path + '/raw_pixelscore.csv'
         filename_hist = path + '/raw_pixelscore_hist.png'
-    
+
     # Merge with original metadata by left_join on id
     # i.e. All wors in original metadata are preserved.
     df_metadata = load_metadata(base_dir, collection_id)
     print(df_metadata.dtypes)
     print(df.dtypes)
-    df = pd.merge(df_metadata, df, how = 'left', on = ['id'])
+    df = pd.merge(df_metadata, df, how='left', on=['id'])
     print('Merged df metadata and scores.')
-    print(df.head(10))    
+    print(df.head(10))
     # Add pixelscore rank column, rank 1 is most rare.
-    df['pixelScoreRank'] = df['PixelScore'].rank(ascending = False)
+    df['pixelScoreRank'] = df['PixelScore'].rank(ascending=False)
     # Correlation of pixelscore with rarityScore ground truth
     corr = df['rarityScore'].corr(df['PixelScore'])
     print('Correlation between ground truth rarityScore and pixelScore: {}'.format(corr))
@@ -248,17 +255,18 @@ def save_collection_scores(base_dir, collection_id, results_file, df, global_sco
     plt.xlabel("pixelscore")
     plt.ylabel("Frequency")
     plt.savefig(filename_hist)
-    
+
     # Raw log flush to tempdir.
     n_files = len(os.listdir(FLAGS.raw_logs_dir)) + 1
-    filestring = FLAGS.raw_logs_dir + '/{},{},{},{}.txt'.format(n_files,collection_id,corr,corr_rank)
+    filestring = FLAGS.raw_logs_dir + \
+        '/{},{},{},{}.txt'.format(n_files, collection_id, corr, corr_rank)
     os.system('touch {}'.format(filestring))
-    
+
     update_results(results_file,
-        {'collection_id': collection_id,
-        'corr_rarityScore': corr,
-        'corr_rarityRank': corr_rank,
-        })
+                   {'collection_id': collection_id,
+                    'corr_rarityScore': corr,
+                    'corr_rarityRank': corr_rank,
+                    })
     return True
 
 
@@ -377,39 +385,40 @@ def get_bin_count(point, H, edges):
     x = point[0]
     y = point[1]
     z = point[2]
-    
+
     x_edges = edges[0]
-    x_bin = len(x_edges) - 2 # Init to last bin to make 255 included
+    x_bin = len(x_edges) - 2  # Init to last bin to make 255 included
     # Left bin edge included - double check that.
     # TODO(dstorcheus): check inclusion of right edge
-    for i in range(1,len(x_edges)):
+    for i in range(1, len(x_edges)):
         if x_edges[i-1] <= x and x < x_edges[i]:
             x_bin = i-1
             break
     y_edges = edges[1]
-    y_bin = len(y_edges) - 2 
+    y_bin = len(y_edges) - 2
     # TODO(dstorcheus): check inclusion of right edge
-    for i in range(1,len(y_edges)):
+    for i in range(1, len(y_edges)):
         if y_edges[i-1] <= y and y < y_edges[i]:
             y_bin = i-1
             break
     z_edges = edges[2]
     z_bin = len(z_edges) - 2
     # TODO(dstorcheus): check inclusion of right edge
-    for i in range(1,len(z_edges)):
+    for i in range(1, len(z_edges)):
         if z_edges[i-1] <= z and z < z_edges[i]:
             z_bin = i-1
             break
     #print('Found bins')
-    #print((x_bin,y_bin,z_bin))
+    # print((x_bin,y_bin,z_bin))
     count = H[x_bin, y_bin, z_bin]
     return count
 
-def get_bin_count_opt(pixel,H,edges):
+
+def get_bin_count_opt(pixel, H, edges):
     """Optimized bet bin counts for single pixel acxross entire collection."""
-    ind_0 = np.digitize(pixel[:,0],edges[0]) - 1
-    ind_1 = np.digitize(pixel[:,1],edges[1]) - 1
-    ind_2 = np.digitize(pixel[:,2],edges[2]) - 1
+    ind_0 = np.digitize(pixel[:, 0], edges[0]) - 1
+    ind_1 = np.digitize(pixel[:, 1], edges[1]) - 1
+    ind_2 = np.digitize(pixel[:, 2], edges[2]) - 1
     # The last bin intex must be again -1 to match 255 pixel
     ind_0 = np.where(ind_0 == 10, 9, ind_0)
     ind_1 = np.where(ind_1 == 10, 9, ind_1)
@@ -417,18 +426,20 @@ def get_bin_count_opt(pixel,H,edges):
     counts_opt = H[(ind_0, ind_1, ind_2)]
     return counts_opt
 
-def get_single_pixel_score(base_dir, collection_id, pixel, H, edges, save_hist = False):
+
+def get_single_pixel_score(base_dir, collection_id, pixel, H, edges, save_hist=False):
     """Score number for one pixel.
-    
+
 
     It's count is in Hist[i,j,k]
 
     pixel: [n_tokens, 3]
-    
+
     """
     #start = time.time()
     if save_hist:
-        filename = FLAGS.hist_dir + '/{}/p_{}_{}_hist.npz'.format(collection_id, i, j)
+        filename = FLAGS.hist_dir + \
+            '/{}/p_{}_{}_hist.npz'.format(collection_id, i, j)
         # savez with two arrays: H and edges
         #np.savez_compressed('p_{}_{}_hist.npz'.format(i ,j), H = H, edges = edges)
         np.savez_compressed(filename, H)
@@ -436,7 +447,7 @@ def get_single_pixel_score(base_dir, collection_id, pixel, H, edges, save_hist =
         #os.system('sudo mv p_{}_{}_hist.npz {}'.format(i, j, filename))
     #stop = time.time()
     #print("Histogram time:", stop - start)
-    #print(H.shape)
+    # print(H.shape)
     # Flattened hist corresponds to counts for all 10x10x10=1000 3D bin boxes.
     #counts = H.flatten()
     # TODO(dstorcheus): get the list of 3D intervals for bins (cubes), needed for new collections placing.
@@ -458,31 +469,34 @@ def get_single_pixel_score(base_dir, collection_id, pixel, H, edges, save_hist =
     #print(counts)
     """
     return counts_opt
-    
-     
-def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_collection_counts = False, save_pixels_hist = False, global_score = True):
+
+
+def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_collection_counts=False, save_pixels_hist=False, global_score=True):
     # Score is created as new column in df.
     # For each pixel
     collection_scores = []
     pixels_hist = []
     for i in range(IMG_HEIGHT):
         for j in range(IMG_WIDTH):
-            pixel = X_train[:,i,j]
+            pixel = X_train[:, i, j]
             # TODO: uncomment if local scores are needed.
             H, edges = np.histogramdd(pixel,
-            bins = (N_BINS_R, N_BINS_G, N_BINS_B),
-            range = [(0,255),(0,255),(0,255)])
-            #pixels_hist.append(H)
+                                      bins=(N_BINS_R, N_BINS_G, N_BINS_B),
+                                      range=[(0, 255), (0, 255), (0, 255)])
+            # pixels_hist.append(H)
 
             # Replace hist by the global hist
-            H = get_global_hist(i,j) 
+            H = get_global_hist(i, j)
 
-            pixel_scores = get_single_pixel_score(base_dir, collection_id, pixel, H, edges) # Counts returned.
+            # Counts returned.
+            pixel_scores = get_single_pixel_score(
+                base_dir, collection_id, pixel, H, edges)
             collection_scores.append(pixel_scores)
             #print('Processed pixel ({}, {}) of (224,224)'.format(i,j))
     if save_collection_counts:
         collection_counts = np.array(collection_scores).astype('int32')
-        filename = base_dir + '/{}/numpy/pixel_counts.npz'.format(collection_id)
+        filename = base_dir + \
+            '/{}/numpy/pixel_counts.npz'.format(collection_id)
         savez_compressed('pixel_counts.npz', X_train)
         print('Saving pixel counts as numpy to {}'.format(filename))
         os.system('sudo mv pixel_counts.npz {}'.format(filename))
@@ -502,13 +516,14 @@ def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_c
     # TODO(dstorcheus): check the above.
     collection_scores = np.array(collection_scores)
     if global_score:
-        collection_scores = PIXELSCORE_SCALING_MAX * MIN_PIXEL_COUNT * 1.0 / collection_scores
-        collection_scores = np.mean(collection_scores, axis = 0)
+        collection_scores = PIXELSCORE_SCALING_MAX * \
+            MIN_PIXEL_COUNT * 1.0 / collection_scores
+        collection_scores = np.mean(collection_scores, axis=0)
     else:
-        collection_scores = np.mean(collection_scores, axis = 0)
+        collection_scores = np.mean(collection_scores, axis=0)
         collection_scores = 1.0 / collection_scores
     # Now refall that rarity is inversely proportional to frequency.
-    
+
     # Also the global score shoul dbe done without min-max rescaler, since it is global!
     if global_score:
         scores = collection_scores
@@ -524,11 +539,12 @@ def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_c
     print(df.head(10))
     return df
 
+
 def get_single_pixel_global_counts(pixel, global_counts):
     """Optimized bet bin counts for single pixel acxross entire collection."""
-    ind_0 = np.digitize(pixel[:,0],edges[0]) - 1
-    ind_1 = np.digitize(pixel[:,1],edges[1]) - 1
-    ind_2 = np.digitize(pixel[:,2],edges[2]) - 1
+    ind_0 = np.digitize(pixel[:, 0], edges[0]) - 1
+    ind_1 = np.digitize(pixel[:, 1], edges[1]) - 1
+    ind_2 = np.digitize(pixel[:, 2], edges[2]) - 1
     # The last bin intex must be again -1 to match 255 pixel
     ind_0 = np.where(ind_0 == 10, 9, ind_0)
     ind_1 = np.where(ind_1 == 10, 9, ind_1)
@@ -536,25 +552,28 @@ def get_single_pixel_global_counts(pixel, global_counts):
     counts_opt = H[(ind_0, ind_1, ind_2)]
     return counts_opt
 
+
 def get_raw_global_pixelscores_collection(base_dir, collection_id, X_train, ids, global_counts):
     # DEPRECATED!!!!
     """Global pixelscore using global counts."""
     collection_scores = []
     for i in range(IMG_HEIGHT):
         for j in range(IMG_WIDTH):
-            pixel = X_train[:,i,j]
-            pixel_scores = get_single_pixel_global_counts(pixel) # Counts returned.
+            pixel = X_train[:, i, j]
+            # Counts returned.
+            pixel_scores = get_single_pixel_global_counts(pixel)
             collection_scores.append(pixel_scores)
             #print('Processed pixel ({}, {}) of (224,224)'.format(i,j))
     if save_collection_counts:
         collection_counts = np.array(collection_scores).astype('int32')
-        filename = base_dir + '/{}/numpy/pixel_counts.npz'.format(collection_id)
+        filename = base_dir + \
+            '/{}/numpy/pixel_counts.npz'.format(collection_id)
         savez_compressed('pixel_counts.npz', X_train)
         print('Saving pixel counts as numpy to {}'.format(filename))
         os.system('sudo mv pixel_counts.npz {}'.format(filename))
     # Now collection_scores are [224 *224 , n_tokens] and represent count numbers.
     # Aggrerage them
-    collection_scores = np.mean(collection_scores, axis = 0)
+    collection_scores = np.mean(collection_scores, axis=0)
     # Now refall that rarity is inversely proportional to frequency.
     collection_scores = 1.0 / collection_scores
     scaler = MinMaxScaler(
@@ -576,7 +595,8 @@ def main(argv):
     base_dir = FLAGS.base_dir
     X_train, ids = load_collection_numpy(base_dir, collection_id)
     df = get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids)
-    save_collection_scores(FLAGS.base_dir, FLAGS.collection_id, FLAGS.results_file, df)
+    save_collection_scores(
+        FLAGS.base_dir, FLAGS.collection_id, FLAGS.results_file, df)
     print(
         'Completed Score generation for collection {}'.format(
             FLAGS.collection_id))

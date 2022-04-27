@@ -89,9 +89,10 @@ flags.DEFINE_string(
     '/mnt/disks/ssd/pixelscore_service/whitelists_blacklists/scored_ids_11_Apr_2022.csv',
     'Scored collections.')
 
+
 def apply_qcut(df, n_classes):
     """Applies careful qcut to rarityScore.
-    
+
     if number of possible quantiles less than n_classes, then n_classes is
     reduced to max num of quantiles.
 
@@ -112,7 +113,8 @@ def apply_qcut(df, n_classes):
             labels=np.arange(n_classes))
         return df
     else:
-        print('Max possible number of bins (labels) for rarityScore is {}, which is less than proposed n_classes {}'.format(n_labels, n_classes))
+        print('Max possible number of bins (labels) for rarityScore is {}, which is less than proposed n_classes {}'.format(
+            n_labels, n_classes))
         df['rarity_bin'] = pd.qcut(
             df['rarityScore'],
             n_labels,
@@ -244,6 +246,7 @@ def collection_to_array(base_dir, collection_id):
     print(X_train.shape)
     return X_train, ids
 
+
 def scores_hist(base_dir, collection_id):
     """ Colelct raw global pixel score from all scored collections
 
@@ -252,7 +255,8 @@ def scores_hist(base_dir, collection_id):
     """
     all_scores = []
     for id in FLAGS.collections_whitelist:
-        df = pd.read_csv(base_dir + '/{}/pixelscore/global_raw_pixelscore.csv'.format(id))
+        df = pd.read_csv(
+            base_dir + '/{}/pixelscore/global_raw_pixelscore.csv'.format(id))
         scores = df['pixelScore']
         all_scores.append(scores)
     all_scores = np.array(all_scores).flatten()
@@ -264,6 +268,7 @@ def scores_hist(base_dir, collection_id):
     print('Hist Successfully saved')
     return True
 
+
 def bucketize_scores(base_dir):
     """ Bucketize final scores into bins
 
@@ -273,10 +278,11 @@ def bucketize_scores(base_dir):
     df = pd.read_csv('merged_sorted_global_raw_pixelscore.csv')
     bin_labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     # What quantiles should we select for scores?
-    quantiles = [0.17, 0.34, 0.49, 0.62, 0.73, 0.82, 0.89, 0.94, 0.97, 0.99, 1.0]
-    df['bin_pixelScore'] = pd.qcut(df['pixelScore'],    
-                              q=quantiles,
-                              labels=bin_labels)
+    quantiles = [0.17, 0.34, 0.49, 0.62, 0.73,
+                 0.82, 0.89, 0.94, 0.97, 0.99, 1.0]
+    df['bin_pixelScore'] = pd.qcut(df['pixelScore'],
+                                   q=quantiles,
+                                   labels=bin_labels)
     print(df.head(100)['bin_pixelScore'])
     # Check hist of that.
     binned_scores = df['bin_pixelScore'].values
@@ -295,16 +301,20 @@ def merge_results(base_dir, collection_id):
 
     Done for all collections at once.
     """
-    whitelist = pd.read_csv(FLAGS.scored_collections_whitelist)['collection_id'].values
+    whitelist = pd.read_csv(FLAGS.scored_collections_whitelist)[
+        'collection_id'].values
     id = whitelist[0]
-    all_df = pd.read_csv(base_dir + '/{}/pixelscore/global_raw_pixelscore.csv'.format(id))
+    all_df = pd.read_csv(
+        base_dir + '/{}/pixelscore/global_raw_pixelscore.csv'.format(id))
     whitelist = whitelist[1:]
     for id in whitelist:
-        df = pd.read_csv(base_dir + '/{}/pixelscore/global_raw_pixelscore.csv'.format(id))
+        df = pd.read_csv(
+            base_dir + '/{}/pixelscore/global_raw_pixelscore.csv'.format(id))
         all_df = pd.concat([all_df, df])
         print('Merged collection {}'.format(id))
     print(all_df)
     all_df.to_csv('merged_global_raw_pixelscore.csv')
+
 
 def main(argv):
     if FLAGS.collection_id is not None:

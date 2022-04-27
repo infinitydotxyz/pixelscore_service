@@ -68,32 +68,36 @@ flags.DEFINE_string(
     '/mnt/disks/ssd/pixelscore_service/within_collection_score/blacklist_1.csv',
     'Whitelist  of collection_id to run analysis on.')
 
+
 def find_not_scored_ids(base_dir, whitelist):
     """Examples ids and % examples not scored.
-    
+
     images are matched by token ids, 
     which is first column in metadata, 
     reided image filename and tokenId column in pixelscore file.
     """
     for col_id in whitelist:
-        pixelscore_f = base_dir + '/{}/pixelscore/pixelscore.csv'.format(col_id)
-        metadata_f = base_dir + '/{}/metadata/metadata.csv'.format(col_id) 
+        pixelscore_f = base_dir + \
+            '/{}/pixelscore/pixelscore.csv'.format(col_id)
+        metadata_f = base_dir + '/{}/metadata/metadata.csv'.format(col_id)
         try:
             pixelscore_df = pd.read_csv(pixelscore_f)
-            metadata_df = pd.read_csv(metadata_f, header=None, low_memory=False)
+            metadata_df = pd.read_csv(
+                metadata_f, header=None, low_memory=False)
             metadata_df.columns = ['id', 'rarityScore', 'rarityRank', 'url']
         except:
             print('NO pixelscore file for collection {}'.format(col_id))
             continue
-        
+
         # Sanity check
         len_metadata = len(metadata_df['id'].values)
         len_pixelscore = len(pixelscore_df['tokenId'].values)
         if len_metadata != len_pixelscore:
-            print('Warning: len metadata {} not equal len pixelscore {}'.format(len_metadata, len_pixelscore))
-        
+            print('Warning: len metadata {} not equal len pixelscore {}'.format(
+                len_metadata, len_pixelscore))
+
         # Count {total, scored, missing}
-        total_ids = metadata_df['id'].values 
+        total_ids = metadata_df['id'].values
         df_nan = pixelscore_df[pixelscore_df['rarityScore'].isna()]
         not_scored_ids = df_nan['tokenId'].values
         scored_ids = list(set(total_ids) - set(not_scored_ids))
@@ -103,8 +107,9 @@ def find_not_scored_ids(base_dir, whitelist):
         n_not_scored = len(not_scored_ids)
         percent_scored = 100.0 * float(n_scored) / float(n_total)
         percent_not_scored = 100.0 * float(n_not_scored) / float(n_total)
-        if percent_not_scored >0:
-            print('Not scored ids percent {} in collection {}'.format(percent_not_scored, col_id))
+        if percent_not_scored > 0:
+            print('Not scored ids percent {} in collection {}'.format(
+                percent_not_scored, col_id))
         # Record this data.
         not_scored_df = pd.DataFrame()
         not_scored_df['notScoredIds'] = not_scored_ids
@@ -114,16 +119,18 @@ def find_not_scored_ids(base_dir, whitelist):
             'nNotScoredTokens': [n_not_scored],
             'percentScoredTokens': [percent_scored],
             'percentNotScoredTokens': [percent_not_scored]
-            })
+        })
         print(not_scored_df)
         print(stats_df)
-        not_scored_ids_path = base_dir + '/{}/pixelscore/not_scored_ids.csv'.format(col_id)
+        not_scored_ids_path = base_dir + \
+            '/{}/pixelscore/not_scored_ids.csv'.format(col_id)
         stats_path = base_dir + '/{}/pixelscore/stats.csv'.format(col_id)
         not_scored_df.to_csv('not_scored_ids.csv')
         stats_df.to_csv('stats.csv')
         os.system('sudo mv not_scored_ids.csv {}'.format(not_scored_ids_path))
         os.system('sudo mv stats.csv {}'.format(stats_path))
     return True
+
 
 def main(argv):
     df = pd.read_csv(FLAGS.collection_whitelist)

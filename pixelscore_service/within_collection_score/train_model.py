@@ -80,11 +80,14 @@ flags.DEFINE_boolean(
 
 # Callbacks.
 
+
 class AccThresholdCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         if(logs.get('accuracy') > ACCURACY_THRESHOLD):
-            print("\nReached %2.2f%% accuracy, so stopping training!!" %(ACCURACY_THRESHOLD*100))
+            print("\nReached %2.2f%% accuracy, so stopping training!!" %
+                  (ACCURACY_THRESHOLD*100))
             self.model.stop_training = True
+
 
 def tensorboard_callback(directory, name):
     log_dir = directory + "/" + name
@@ -94,10 +97,10 @@ def tensorboard_callback(directory, name):
 
 def reduce_on_plateau():
     r_c = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
-            factor = 0.1,
-            patience = 2,
-            verbose = 1,
-            cooldown = 1)
+                                               factor=0.1,
+                                               patience=2,
+                                               verbose=1,
+                                               cooldown=1)
     return r_c
 
 
@@ -113,7 +116,7 @@ def model_checkpoint(directory, name):
 
 def update_results(results_file, stats_dict):
     """Update results file with stats - by colleciton id.
-    
+
     stats_dict: e.g. {'model_accuracy': 0.4, collection_id: '0x333'}
     """
     df_base = pd.read_csv(results_file)
@@ -124,12 +127,13 @@ def update_results(results_file, stats_dict):
         df_update = pd.DataFrame.from_dict(stats_dict_fordf)
         df_base = df_update
         print('DF results updated')
-        print(df_base)   
+        print(df_base)
         df_base.to_csv(results_file)
         return True
     if stats_dict['collection_id'] in df_base['collection_id'].values:
         for key, value in stats_dict.items():
-            df_base.loc[df_base.collection_id == stats_dict['collection_id'],key] = value
+            df_base.loc[df_base.collection_id ==
+                        stats_dict['collection_id'], key] = value
     else:
         stats_dict_fordf = dict()
         for key, value in stats_dict.items():
@@ -137,13 +141,14 @@ def update_results(results_file, stats_dict):
         df_update = pd.DataFrame.from_dict(stats_dict_fordf)
         df_base = pd.concat([df_base, df_update])
     print('DF results updated')
-    print(df_base)   
-    df_base.to_csv(results_file, columns = [
+    print(df_base)
+    df_base.to_csv(results_file, columns=[
         'collection_id',
         'model_accuracy',
         'corr_rarityScore',
         'corr_rarityRank'])
     return True
+
 
 def load_collection_numpy(base_dir, collection_id):
     """Loads nft collection pixels as archived numpy array.
@@ -420,10 +425,10 @@ def train_model(base_dir, collection_id, results_file, model, X_train, y_train):
     model_epochs = len(hist['val_accuracy'])
     model_accuracy = hist['val_accuracy'][-1]
     update_results(results_file,
-        {'collection_id': collection_id,
-        'model_accuracy': model_accuracy,
-        'model_epochs': model_epochs,
-        })
+                   {'collection_id': collection_id,
+                    'model_accuracy': model_accuracy,
+                    'model_epochs': model_epochs,
+                    })
     model.save(tf_logs + '/model')
     return model
 

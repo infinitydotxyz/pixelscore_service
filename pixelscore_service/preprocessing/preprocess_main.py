@@ -14,7 +14,8 @@ from absl import flags
 import pandas as pd
 import multiprocessing as mp
 
-debug_whitelist = ['0xd3cd44f07744da3a6e60a4b5fda1370400ad515b', '0x6206d330d018cfdca00c7e9e210c79d51c6b1d07', '0xc0a2632641449400ec2c54b94fa371c1d85406fc', '0xd08b02a76552fa54d8616f8d42c3cf0de3c0a9ec', '0xc8100dd81e0d8d0901b7b5831e575b03e1489057', '0x892555e75350e11f2058d086c72b9c94c9493d72', '0x8460bb8eb1251a923a31486af9567e500fc2f43f', '0x91a7c7ca17f9f8579ac0a34fa0203f99fa37cf48', '0x80581ea8339d682ca5a71e3f561e3ab0e270398e', '0x35b0ecc952cef736c12a7ef3a830f438f67912b3', '0x0574c34385b039c2bb8db898f61b7767024a9449', '0xbe588550f82aa9207e84d07b305767cf33249dc9', '0x85f06f0dc7ac62f006ab09227e81709b7c39f50c', '0x4f438a2e7d060733f90775566af040576bd441b0', '0x880644ddf208e471c6f2230d31f9027578fa6fcc', '0xb6329bd2741c4e5e91e26c4e653db643e74b2b19', '0x63fa29fec10c997851ccd2466dad20e51b17c8af', '0x2070f7821d9c8ebfdecc1bc981d1308cc0d93843', '0x714a3c939a3664c06e3bb0e8315cefff84526f17', '0x4530ed5907ceb4e14b0550a28e7d300cc773b92e']
+debug_whitelist = ['0xd3cd44f07744da3a6e60a4b5fda1370400ad515b', '0x6206d330d018cfdca00c7e9e210c79d51c6b1d07', '0xc0a2632641449400ec2c54b94fa371c1d85406fc', '0xd08b02a76552fa54d8616f8d42c3cf0de3c0a9ec', '0xc8100dd81e0d8d0901b7b5831e575b03e1489057', '0x892555e75350e11f2058d086c72b9c94c9493d72', '0x8460bb8eb1251a923a31486af9567e500fc2f43f', '0x91a7c7ca17f9f8579ac0a34fa0203f99fa37cf48', '0x80581ea8339d682ca5a71e3f561e3ab0e270398e', '0x35b0ecc952cef736c12a7ef3a830f438f67912b3',
+                   '0x0574c34385b039c2bb8db898f61b7767024a9449', '0xbe588550f82aa9207e84d07b305767cf33249dc9', '0x85f06f0dc7ac62f006ab09227e81709b7c39f50c', '0x4f438a2e7d060733f90775566af040576bd441b0', '0x880644ddf208e471c6f2230d31f9027578fa6fcc', '0xb6329bd2741c4e5e91e26c4e653db643e74b2b19', '0x63fa29fec10c997851ccd2466dad20e51b17c8af', '0x2070f7821d9c8ebfdecc1bc981d1308cc0d93843', '0x714a3c939a3664c06e3bb0e8315cefff84526f17', '0x4530ed5907ceb4e14b0550a28e7d300cc773b92e']
 
 FLAGS = flags.FLAGS
 
@@ -54,30 +55,44 @@ flags.DEFINE_string(
     'mode',
     'is_pre_reveal',
     'Mode to run preprocessing')
+flags.DEFINE_string(
+    'pre_reveal_logs_dir',
+    '/mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_pre_reveal',
+    'Logs to save pre reveal ids.')
+flags.DEFINE_string(
+    'is_empty_logs_dir',
+    '/mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_empty',
+    'Logs to save is empty ids.')
 
 def run_process(collection_id, base_dir):
     """Single process run of img to numpy function."""
     print('Converting collection {}'.format(collection_id))
     try:
-        os.system('python3 {}/pixelscore_service/preprocessing/preprocess_lib.py --collection_id={} --base_dir={} --mode="is_pre_reveal"'.format(FLAGS.code_path, collection_id, base_dir))
+        os.system('python3 {}/pixelscore_service/preprocessing/preprocess_lib.py --collection_id={} --base_dir={} --mode="is_pre_reveal" --pre_reveal_logs_dir={}'.format(
+            FLAGS.code_path, collection_id, base_dir, FLAGS.pre_reveal_logs_dir))
     except:
-        print('Unable to compute pixelscores for collection {}, trying next one'.format(collection_id))
+        print('Unable to compute pixelscores for collection {}, trying next one'.format(
+            collection_id))
     return True
+
 
 def run_process_is_empty(collection_id, base_dir):
     """Single process run of img to numpy function."""
     print('Converting collection {}'.format(collection_id))
     try:
-        os.system('python3 {}/pixelscore_service/preprocessing/preprocess_lib.py --collection_id={} --base_dir={} --mode="is_empty"'.format(FLAGS.code_path, collection_id, base_dir))
+        os.system('python3 {}/pixelscore_service/preprocessing/preprocess_lib.py --collection_id={} --base_dir={} --mode="is_empty" --is_empty_logs_dir={}'.format(
+            FLAGS.code_path, collection_id, base_dir, FLAGS.is_empty_logs_dir))
     except:
-        print('Unable to compute pixelscores for collection {}, trying next one'.format(collection_id))
+        print('Unable to compute pixelscores for collection {}, trying next one'.format(
+            collection_id))
     return True
+
 
 def main(argv):
     base_dir = FLAGS.base_dir
     if FLAGS.collection_whitelist is None:
         print('Collection whitelist not specified.')
-    if FLAGS.use_whitelist:    
+    if FLAGS.use_whitelist:
         df = pd.read_csv(FLAGS.collection_whitelist)
         whitelist = df['collection_id'].values
     else:
@@ -89,14 +104,16 @@ def main(argv):
         whitelist = set(whitelist) - set(blacklist)
         whitelist = list(whitelist)
     print('Using whitelist of size {} with the following:'.format(len(whitelist)))
-    #print(whitelist)
+    # print(whitelist)
 
     # Define parallel execution.
     pool = mp.Pool(mp.cpu_count())
     if FLAGS.mode == 'is_pre_reveal':
-        results = [pool.apply_async(run_process, args=(collection_id, base_dir)) for collection_id in whitelist]
+        results = [pool.apply_async(run_process, args=(
+            collection_id, base_dir)) for collection_id in whitelist]
     if FLAGS.mode == 'is_empty':
-        results = [pool.apply_async(run_process_is_empty, args=(collection_id, base_dir)) for collection_id in whitelist]
+        results = [pool.apply_async(run_process_is_empty, args=(
+            collection_id, base_dir)) for collection_id in whitelist]
     pool.close()
     pool.join()
     print(results)

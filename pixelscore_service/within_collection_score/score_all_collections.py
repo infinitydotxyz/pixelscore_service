@@ -50,6 +50,11 @@ flags.DEFINE_string(
     'results_dir',
     '/mnt/disks/ssd/pixelscore_service/within_collection_score/scoring_results',
     'Folder that stores csv with scoring results {col_id, time_finished, model_acc, corr}.')
+flags.DEFINE_string(
+    'code_path',
+    '/mnt/disks/ssd/git/pixelscore_service',
+    'Root oath to project with code')
+
 
 def get_numpy_ready_collections(base_dir, whitelist):
     """Return ids for which numpy already generated."""
@@ -67,7 +72,7 @@ def get_numpy_ready_collections(base_dir, whitelist):
 
 def create_results_file(results_dir):
     """Makes empty results file for the current scoring round.
-    
+
     Results file should contain:
 
     collection_id (can be repeated)
@@ -83,7 +88,7 @@ def create_results_file(results_dir):
     utc_timestamp = int(utc_time.timestamp())
     filename = results_dir + '/{}_results.csv'.format(utc_timestamp)
     if not os.path.exists(filename):
-        df = pd.DataFrame(columns = [
+        df = pd.DataFrame(columns=[
             'collection_id',
             'model_accuracy',
             'model_epochs',
@@ -99,7 +104,7 @@ def main(argv):
     if FLAGS.collection_whitelist is None:
         print('Collection whitelist not specified.')
     results_file = create_results_file(FLAGS.results_dir)
-    if FLAGS.use_whitelist:    
+    if FLAGS.use_whitelist:
         df = pd.read_csv(FLAGS.collection_whitelist)
         whitelist = df['colelction_id'].values
     else:
@@ -113,14 +118,18 @@ def main(argv):
     print('Using whitelist of size {} with the following:'.format(len(whitelist)))
     print(whitelist)
     while len(whitelist) > 0:
-        ready_whitelist = get_numpy_ready_collections(FLAGS.base_dir, whitelist)
+        ready_whitelist = get_numpy_ready_collections(
+            FLAGS.base_dir, whitelist)
         for collection_id in ready_whitelist:
             print('Start computing pixelscores for collection {}'.format(collection_id))
             try:
-                os.system('python3 pixelscore_service/within_collection_score/train_model.py --collection_id={} --base_dir={} --results_file={}'.format(collection_id, FLAGS.base_dir, results_file))
-                os.system('python3 pixelscore_service/within_collection_score/main.py --collection_id={} --base_dir={} --results_file={}'.format(collection_id, FLAGS.base_dir, results_file))
+                os.system('python3 {}/pixelscore_service/within_collection_score/train_model.py --collection_id={} --base_dir={} --results_file={}'.format(
+                    FLAGS.code_path, collection_id, FLAGS.base_dir, results_file))
+                os.system('python3 {}/pixelscore_service/within_collection_score/main.py --collection_id={} --base_dir={} --results_file={}'.format(
+                    FLAGS.code_path, collection_id, FLAGS.base_dir, results_file))
             except:
-                print('Unable to compute pixelscores for collection {}, trying next one'.format(collection_id))
+                print('Unable to compute pixelscores for collection {}, trying next one'.format(
+                    collection_id))
         whitelist = [x for x in whitelist if x not in ready_whitelist]
     print('Success. Score all collections complete.')
 

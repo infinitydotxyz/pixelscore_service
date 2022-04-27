@@ -87,7 +87,8 @@ def update_results(results_file, stats_dict):
         return True
     if stats_dict['collection_id'] in df_base['collection_id'].values:
         for key, value in stats_dict.items():
-            df_base.loc[df_base.collection_id == stats_dict['collection_id'],key] = value
+            df_base.loc[df_base.collection_id ==
+                        stats_dict['collection_id'], key] = value
     else:
         stats_dict_fordf = dict()
         for key, value in stats_dict.items():
@@ -96,26 +97,29 @@ def update_results(results_file, stats_dict):
         df_base = pd.concat([df_base, df_update])
     print('DF results updated')
     print(df_base)
-    df_base.to_csv(results_file, columns = [
+    df_base.to_csv(results_file, columns=[
         'collection_id',
         'model_accuracy',
         'corr_rarityScore',
         'corr_rarityRank'])
     return True
 
+
 def rename_columns(df):
     """Rename and reorder columns in the output pixelscore df."""
     df.rename(columns={
-        'id':'tokenId',
-        'rarityScore':'rarityScore',
-        'rarityRank':'rarityRank',
-        'PixelScore':'pixelScore',
-        'PixelScoreRank':'pixelScoreRank',
-        'url':'imageUrl',
-        'collectionAddress':'collectionAddress'
-        },inplace=True)
-    df = df[['collectionAddress','tokenId','pixelScore','pixelScoreRank','rarityScore','rarityRank','imageUrl']]
+        'id': 'tokenId',
+        'rarityScore': 'rarityScore',
+        'rarityRank': 'rarityRank',
+        'PixelScore': 'pixelScore',
+        'PixelScoreRank': 'pixelScoreRank',
+        'url': 'imageUrl',
+        'collectionAddress': 'collectionAddress'
+    }, inplace=True)
+    df = df[['collectionAddress', 'tokenId', 'pixelScore',
+             'pixelScoreRank', 'rarityScore', 'rarityRank', 'imageUrl']]
     return df
+
 
 def load_collection_numpy(base_dir, collection_id):
     """Loads nft collection pixels as archived numpy array.
@@ -173,27 +177,27 @@ def save_collection_scores(base_dir, collection_id, results_file, df):
     if not os.path.exists(path):
         os.system('sudo mkdir {}'.format(path))
     filename = path + '/pixelscore.csv'
-    
+
     # Merge with original metadata by left_join on id
     # i.e. All wors in original metadata are preserved.
     df_metadata = load_metadata(base_dir, collection_id)
     print(df_metadata.dtypes)
     print(df.dtypes)
-    df = pd.merge(df_metadata, df, how = 'left', on = ['id'])
+    df = pd.merge(df_metadata, df, how='left', on=['id'])
     print('Merged df metadata and scores.')
-    print(df.head(10))    
+    print(df.head(10))
     # Add pixelscore rank column, rank 1 is most rare.
-    df['pixelScoreRank'] = df['PixelScore'].rank(ascending = False)
+    df['pixelScoreRank'] = df['PixelScore'].rank(ascending=False)
     # Correlation of pixelscore with rarityScore ground truth
     corr = df['rarityScore'].corr(df['PixelScore'])
     print('Correlation between ground truth rarityScore and pixelScore: {}'.format(corr))
     corr_rank = df['rarityRank'].corr(df['pixelScoreRank'])
     print('Correlation between ground truth rarityScoreRank and pixelScoreRank: {}'.format(corr_rank))
     update_results(results_file,
-        {'collection_id': collection_id,
-        'corr_rarityScore': corr,
-        'corr_rarityRank': corr_rank,
-        })
+                   {'collection_id': collection_id,
+                    'corr_rarityScore': corr,
+                    'corr_rarityRank': corr_rank,
+                    })
     # Rename columns in output format and save to disk.
     df = rename_columns(df)
     df.to_csv('pixelscore.csv')
@@ -316,10 +320,10 @@ def get_layer_output_collection_from_numpy(base_dir, collection_id, model):
     return layer_output, ids
 
 
-def get_scores_collection(X_train, ids, sum_neurons = True):
+def get_scores_collection(X_train, ids, sum_neurons=True):
     # Score is created as new column in df.
     if sum_neurons:
-        scores = np.mean(X_train, axis = 1)
+        scores = np.mean(X_train, axis=1)
     else:
         pixel_scores = []
         # Obtain histograms.
@@ -367,7 +371,8 @@ def main(argv):
     X_train, ids = get_layer_output_collection_from_numpy(
         FLAGS.base_dir, FLAGS.collection_id, model)
     df = get_scores_collection(X_train, ids)
-    save_collection_scores(FLAGS.base_dir, FLAGS.collection_id, FLAGS.results_file, df)
+    save_collection_scores(
+        FLAGS.base_dir, FLAGS.collection_id, FLAGS.results_file, df)
     print(
         'Completed Score generation for collection {}'.format(
             FLAGS.collection_id))

@@ -68,11 +68,23 @@ flags.DEFINE_boolean(
     'use_checkpoint',
     False,
     'Whether to use model checkpoint transfer learned for the given collection. If False, base EfficientNet with imagenet weights is used.')
+flags.DEFINE_string(
+    'img_to_numpy_logs_dir',
+    '/mnt/disks/additional-disk/raw_logs/tmp_preprocess/img_to_numpy',
+    'Logs to save is empty ids.')
+
+
+def flush_log(collection_id):
+    """Flushes log for processed collection."""
+    filename = FLAGS.img_to_numpy_logs_dir + '/{}'.format(collection_id)
+    #print('Saving to {}'.format(filename))
+    os.system('sudo touch {}'.format(filename))
+    print('Converted to numpy: {}'.format(collection_id))
 
 
 def apply_qcut(df, n_classes):
     """Applies careful qcut to rarityScore.
-    
+
     if number of possible quantiles less than n_classes, then n_classes is
     reduced to max num of quantiles.
 
@@ -93,7 +105,8 @@ def apply_qcut(df, n_classes):
             labels=np.arange(n_classes))
         return df
     else:
-        print('Max possible number of bins (labels) for rarityScore is {}, which is less than proposed n_classes {}'.format(n_labels, n_classes))
+        print('Max possible number of bins (labels) for rarityScore is {}, which is less than proposed n_classes {}'.format(
+            n_labels, n_classes))
         df['rarity_bin'] = pd.qcut(
             df['rarityScore'],
             n_labels,
@@ -235,6 +248,7 @@ def main(argv):
         FLAGS.collection_id))
     y_train = load_labels(FLAGS.base_dir, FLAGS.collection_id, ids)
     save_labels_numpy(FLAGS.base_dir, FLAGS.collection_id, y_train, ids)
+    flush_log(FLAGS.collection_id)
     print('Success')
 
 

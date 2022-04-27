@@ -84,7 +84,7 @@ flags.DEFINE_string(
 
 def apply_qcut(df, n_classes):
     """Applies careful qcut to rarityScore.
-    
+
     if number of possible quantiles less than n_classes, then n_classes is
     reduced to max num of quantiles.
 
@@ -105,7 +105,8 @@ def apply_qcut(df, n_classes):
             labels=np.arange(n_classes))
         return df
     else:
-        print('Max possible number of bins (labels) for rarityScore is {}, which is less than proposed n_classes {}'.format(n_labels, n_classes))
+        print('Max possible number of bins (labels) for rarityScore is {}, which is less than proposed n_classes {}'.format(
+            n_labels, n_classes))
         df['rarity_bin'] = pd.qcut(
             df['rarityScore'],
             n_labels,
@@ -237,9 +238,10 @@ def collection_to_array(base_dir, collection_id):
     print(X_train.shape)
     return X_train, ids
 
+
 def is_empty(base_dir, collection_id):
     """Is col has empty np array, then
-    
+
     save it's id to temp dir
     return True
     """
@@ -257,9 +259,10 @@ def is_empty(base_dir, collection_id):
         print('Is empty: {}'.format(collection_id))
     return is_empty
 
+
 def is_pre_reveal(base_dir, collection_id):
     """Is col is pre-reveal (all images equal), then
-    
+
     save it's id to temp dir
     return True
     """
@@ -268,15 +271,15 @@ def is_pre_reveal(base_dir, collection_id):
     path = base_dir + '/{}'.format(collection_id) + '/numpy/pixels.npz'
     x = np.load(path)['arr_0']
     # Get random images
-    ind = np.random.choice(range(len(x)),sample_size)
-    x_sample = x[ind,:]
+    ind = np.random.choice(range(len(x)), sample_size)
+    x_sample = x[ind, :]
     # Check equality
     n_equal = 1
     first = x_sample[0]
     x_list = x_sample[1:]
     for i in x_list:
         if np.array_equiv(first, i):
-            n_equal +=1
+            n_equal += 1
     if n_equal == sample_size:
         is_reveal = True
         # flush log

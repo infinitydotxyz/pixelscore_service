@@ -95,6 +95,18 @@ flags.DEFINE_boolean(
     'use_checkpoint',
     True,
     'Whether to use model checkpoint transfer learned for the given collection. If False, base EfficientNet with imagenet weights is used.')
+flags.DEFINE_boolean(
+    'save_collection_counts',
+    False,
+    'Whether to save collection counts in the process.')
+flags.DEFINE_boolean(
+    'save_pixels_hist',
+    False,
+    'Whether to save pixels hist in the process.')
+flags.DEFINE_boolean(
+    'global_score',
+    True,
+    'Whether to apply global score scaling.')
 flags.DEFINE_string(
     'raw_logs_dir',
     '/mnt/disks/additional-disk/raw_logs/tmp',
@@ -485,9 +497,9 @@ def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_c
                                       range=[(0, 255), (0, 255), (0, 255)])
             # pixels_hist.append(H)
 
-            # Replace hist by the global hist
-            H = get_global_hist(i, j)
-
+            # Replace hist by the global hist if we are running global score compute.
+            if global_score:
+                H = get_global_hist(i, j)
             # Counts returned.
             pixel_scores = get_single_pixel_score(
                 base_dir, collection_id, pixel, H, edges)
@@ -504,7 +516,6 @@ def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_c
         pixels_hist_ = np.array(pixels_hist).astype('int32')
         filename = FLAGS.hist_dir + '/{}/pixels_hist.npz'.format(collection_id)
         print(pixels_hist_.shape)
-        sys.exit()
         savez_compressed(filename, pixels_hist_)
         print('Saving pixels hist as numpy to {}'.format(filename))
         #os.system('sudo mv pixels_hist.npz {}'.format(filename))
@@ -594,9 +605,9 @@ def main(argv):
     collection_id = FLAGS.collection_id
     base_dir = FLAGS.base_dir
     X_train, ids = load_collection_numpy(base_dir, collection_id)
-    df = get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids)
+    df = get_raw_pixelscores_collection(base_dir = base_dir, collection_id = collection_id, X_train = X_train, ids = ids, save_collection_counts=FLAGS.save_collection_counts, save_pixels_hist=FLAGS.save_pixels_hist, global_score = FLAGS.global_score)
     save_collection_scores(
-        FLAGS.base_dir, FLAGS.collection_id, FLAGS.results_file, df)
+        FLAGS.base_dir, FLAGS.collection_id, FLAGS.results_file, df, FLAGS.global_score)
     print(
         'Completed Score generation for collection {}'.format(
             FLAGS.collection_id))

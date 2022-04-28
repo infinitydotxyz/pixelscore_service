@@ -59,6 +59,10 @@ flags.DEFINE_string(
     'code_path',
     '/mnt/disks/ssd/git/pixelscore_service',
     'Root oath to project with code')
+flags.DEFINE_string(
+    'hist_dir',
+    '/mnt/disks/additional-disk/histograms',
+    'Dir to save pixel histograms.')
 
 
 def get_numpy_ready_collections(base_dir, whitelist):
@@ -109,8 +113,8 @@ def run_process(collection_id, base_dir, results_file):
     """Single process run of getting raw pixel scores function."""
     print('Start computing RAW pixelscores for collection {}'.format(collection_id))
     try:
-        os.system('python3 {}/pixelscore_service/within_collection_score/raw_pixelscore_main.py --collection_id={} --base_dir={} --results_file={}'.format(
-            FLAGS.code_path, collection_id, base_dir, results_file))
+        os.system('python3 {}/pixelscore_service/within_collection_score/raw_pixelscore_main.py --collection_id={} --base_dir={} --results_file={} --hist_dir={}'.format(
+            FLAGS.code_path, collection_id, base_dir, results_file, FLAGS.hist_dir))
     except:
         print('Unable to compute pixelscores for collection {}, trying next one'.format(
             collection_id))

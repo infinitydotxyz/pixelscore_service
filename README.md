@@ -62,10 +62,36 @@ python3 pixelscore_service/within_collection_score/convert_all_collections_to_nu
 
 This will do image conversion for all collections in the provided whitelist. Conversion to numpy may fail for a small number of collections, so it's important to get the whitelist of collection ids that were successfully converted to numpy with the convert_all_collections_to_numpy.py script. Like before, the whitelisted collection ids will be dumped as empty filenames in --img_to_numpy_logs_dir.
 
-### Global histograms
+### Get pixel histogrms for each collection
 
 Global hist is the most crutial step for pixelscore computation, as this hist contains key rarity info for each pixel in the collections that we scraped.
 
 One should take the whitelist of collections for which numpy files have been successfully generated in the previous step i.e. pixelscore_service/whitelists_blacklists/global_hist_ready_10_Apr_2022.csv and use them to generate the global pixel histogram.
+
+```sh
+python3 pixelscore_service/within_collection_score/raw_score_all_collections.py --save_pixels_hist=True --global_score=False --hist_dir=/mnt/disks/additional-disk/histograms
+```
+
+The script above (with given flags) generates pixel histograms and saves them to hist_dir/<collection_id>/pixels_hist.npz
+
+### Global global pixels histogram
+
+Collection histograms obtained from the previous step need to be aggregates into the global histogram, this is a single threaded process
+
+```sh
+pixelscore_service/within_collection_score/global_score/get_global_counts.py --hist_dir=/mnt/disks/additional-disk/histograms --global_hist_dir=/mnt/disks/additional-disk/global_hist --global_hist_shards_dir=/mnt/disks/additional-disk/global_histograms/shards
+```
+
+The final global histogram will be saved to <global_hist_dir>/global_hist.npz.
+
+Congrats! The hardest work is done, now we can use all the info from the global hist to score the collections.
+
+### Score collections using global histogram
+
+```sh
+python3 pixelscore_service/within_collection_score/raw_score_all_collections.py --save_pixels_hist=False --global_score=True
+```
+The global scores will be saved to <base_dir>/<collection_id>/pixelscore/global_raw_pixelscore.csv
+The histogram of pixelscores is available in <base_dir>/<collection_id>/pixelscore/global_raw_hist.png
 
 ## Command shortcuts for convenience

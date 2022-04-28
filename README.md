@@ -95,3 +95,26 @@ The global scores will be saved to <base_dir>/<collection_id>/pixelscore/global_
 The histogram of pixelscores is available in <base_dir>/<collection_id>/pixelscore/global_raw_hist.png
 
 ## Command shortcuts for convenience
+
+### Source venv
+```
+source /mnt/disks/ssd/pixelscore_service/pixelscore_service/bin/activate
+```
+### Check is_empty
+```
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/preprocessing/preprocess_main.py --mode="is_pre_reveal" --pre_reveal_logs_dir="/mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_pre_reveal"
+```
+### Check is_pre_reveal
+```
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/preprocessing/preprocess_main.py --mode="is_empty" --is_empty_logs_dir="/mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_empty"
+```
+
+### Convert to numpy
+```
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/convert_all_collections_to_numpy.py --base_dir=/mnt/disks/ssd/data --code_path=/mnt/disks/ssd/git/pixelscore_service --whitelist="pixelscore_service/whitelists_blacklists/np_ready_ids_8_Apr_2022.csv" --img_to_numpy_logs_dir=/mnt/disks/additional-disk/raw_logs/tmp_preprocess/img_to_numpy
+```
+
+### Get pixel histograms
+```
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/raw_score_all_collections.py --base_dir=/mnt/disks/ssd/data --code_path=/mnt/disks/ssd/git/pixelscore_service --whitelist="pixelscore_service/whitelists_blacklists/global_hist_ready_ready_10_Apr_2022.csv" --save_pixels_hist=True --global_score=False --hist_dir=/mnt/disks/additional-disk/histograms
+```

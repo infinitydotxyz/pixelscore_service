@@ -163,7 +163,7 @@ def save_pixels_numpy(base_dir, collection_id, X_train, ids):
     """
     path = base_dir + '/{}'.format(collection_id) + '/numpy'
     if not os.path.exists(path):
-        os.system('sudo mkdir {}'.format(path))
+        os.system('mkdir {}'.format(path))
 
     # Save pixels.
     filename = path + '/pixels.npz'
@@ -189,7 +189,7 @@ def save_labels_numpy(base_dir, collection_id, y_train, ids):
     """
     path = base_dir + '/{}'.format(collection_id) + '/numpy'
     if not os.path.exists(path):
-        os.system('sudo mkdir {}'.format(path))
+        os.system('mkdir {}'.format(path))
 
     # Save pixels.
     filename = path + '/labels.npz'
@@ -255,7 +255,7 @@ def is_empty(base_dir, collection_id):
         # /mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_pre_reveal
         filename = FLAGS.is_empty_logs_dir + '/{}'.format(collection_id)
         #print('Saving to {}'.format(filename))
-        os.system('sudo touch {}'.format(filename))
+        os.system('touch {}'.format(filename))
         print('Is empty: {}'.format(collection_id))
     return is_empty
 
@@ -286,7 +286,7 @@ def is_pre_reveal(base_dir, collection_id):
         # /mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_pre_reveal
         filename = FLAGS.pre_reveal_logs_dir + '/{}'.format(collection_id)
         #print('Saving to {}'.format(filename))
-        os.system('sudo touch {}'.format(filename))
+        os.system('touch {}'.format(filename))
         print('Is pre-reveal: {}'.format(collection_id))
     return is_pre_reveal
 

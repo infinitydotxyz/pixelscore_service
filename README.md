@@ -118,3 +118,8 @@ python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collecti
 ```
 python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/raw_score_all_collections.py --base_dir=/mnt/disks/ssd/data --code_path=/mnt/disks/ssd/git/pixelscore_service --whitelist="pixelscore_service/whitelists_blacklists/global_hist_ready_ready_10_Apr_2022.csv" --save_pixels_hist=True --global_score=False --hist_dir=/mnt/disks/additional-disk/histograms
 ```
+
+### Analyze merged scores
+```
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_lib.py --mode="analyze_merged_scores"
+```

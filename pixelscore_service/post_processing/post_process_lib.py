@@ -88,6 +88,14 @@ flags.DEFINE_string(
     'scored_collections_whitelist',
     '/mnt/disks/ssd/pixelscore_service/whitelists_blacklists/scored_ids_11_Apr_2022.csv',
     'Scored collections.')
+flags.DEFINE_string(
+    'merged_scores_file',
+    '/mnt/disks/ssd/pixelscore_service/post_processing/merged_sorted_global_raw_pixelscore.csv',
+    'File with all scores for all collections merged.')
+flags.DEFINE_string(
+    'post_processing_dir',
+    '/mnt/disks/additional-disk/post_processing',
+    'Dir to store post-processing results, analysis, charts.')
 
 
 def apply_qcut(df, n_classes):
@@ -297,7 +305,7 @@ def bucketize_scores(base_dir):
 
 
 def merge_results(base_dir, collection_id):
-    """ Merge global_raw_pixelscore.csv resultss
+    """ Merge global_raw_pixelscore.csv results
 
     Done for all collections at once.
     """
@@ -315,6 +323,26 @@ def merge_results(base_dir, collection_id):
     print(all_df)
     all_df.to_csv('merged_global_raw_pixelscore.csv')
 
+def analyze_merged_scores(merged_scores_file, post_processing_dir):
+    """Stats analysis of merged scores from all collections."""
+
+    # Part 1: Scatter plot.
+    top_k = 10000
+    df = pd.read_csv(merged_scores_file)
+    y = df['pixelScore'][:top_k]
+    x = range(len(y))
+    fig = plt.scatter(x, y)
+    plt.title('Sorted PIXELSCORE chart')
+    plt.xlabel("token id")
+    plt.ylabel("PIXELSCORE")
+    plt.savefig(post_processing_dir + '/merged_scores_plot.png')
+
+    #Part 2: Binned histogram.
+
+
+    #Part 3: 3D histograms
+
+    return True
 
 def main(argv):
     if FLAGS.collection_id is not None:
@@ -328,6 +356,9 @@ def main(argv):
     if FLAGS.mode == 'bucketize_scores':
         print('Bucketizing scores.')
         bucketize_scores(FLAGS.base_dir)
+    if FLAGS.mode == 'analyze_merged_scores':
+        print('Analyzing merged scores.')
+        analyze_merged_scores(FLAGS.merged_scores_file, FLAGS.post_processing_dir)
     print('Success')
 
 

@@ -96,7 +96,20 @@ flags.DEFINE_string(
     'post_processing_dir',
     '/mnt/disks/additional-disk/post_processing',
     'Dir to store post-processing results, analysis, charts.')
+flags.DEFINE_string(
+    'global_hist_path',
+    '/mnt/disks/additional-disk/global_hist/global_hist.npz',
+    'Path to global hist.')
 
+# Standard image dimensions
+IMG_HEIGHT = 224
+IMG_WIDTH = 224
+
+def get_global_hist(global_hist, i, j):
+    """Quick get global hist."""
+    index = i + IMG_HEIGHT + j
+    hist = global_hist[index, :, :, :]
+    return hist
 
 def apply_qcut(df, n_classes):
     """Applies careful qcut to rarityScore.
@@ -323,24 +336,36 @@ def merge_results(base_dir, collection_id):
     print(all_df)
     all_df.to_csv('merged_global_raw_pixelscore.csv')
 
+def plot_3d_pixel_histogram():
+    """Plots 3D histogram of RGB for specific pixel.
+    
+    Loads global hist object
+    """
+    i = 10
+    j = 15
+    global_hist = np.load(FLAGS.global_hist_path)['arr_0']
+    hist = get_global_hist(global_hist, i, j)
+
+    return True
+    
 def analyze_merged_scores(merged_scores_file, post_processing_dir):
     """Stats analysis of merged scores from all collections."""
 
-    # Part 1: Scatter plot.
+    # Part 1: Line plot.
     top_k = 10000
     df = pd.read_csv(merged_scores_file)
     y = df['pixelScore'][:top_k]
     x = range(len(y))
-    fig = plt.scatter(x, y)
+    # Smoothing to yhat
+    #from scipy.signal import savgol_filter
+    #yhat = savgol_filter(y, 1001, 2)
+    fig = plt.plot(x, y)
     plt.title('Sorted PIXELSCORE chart')
     plt.xlabel("token id")
     plt.ylabel("PIXELSCORE")
-    plt.savefig(post_processing_dir + '/merged_scores_plot.png')
+    plt.savefig(post_processing_dir + '/merged_scores_plot.png', dpi = 512)
 
     #Part 2: Binned histogram.
-
-
-    #Part 3: 3D histograms
 
     return True
 
@@ -359,6 +384,9 @@ def main(argv):
     if FLAGS.mode == 'analyze_merged_scores':
         print('Analyzing merged scores.')
         analyze_merged_scores(FLAGS.merged_scores_file, FLAGS.post_processing_dir)
+    if FLAGS.mode == 'plot_3d_pixel_histogram':
+        print('Plotting 3d pixel histogram.')
+        plot_3d_pixel_histogram(FLAGS.post_processing_dir)
     print('Success')
 
 

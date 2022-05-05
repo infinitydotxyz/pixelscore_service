@@ -72,13 +72,17 @@ flags.DEFINE_string(
     'img_to_numpy_logs_dir',
     '/mnt/disks/additional-disk/raw_logs/tmp_preprocess/img_to_numpy',
     'Logs to save is empty ids.')
+flags.DEFINE_boolean(
+    'save_labels',
+    False,
+    'Whether to save labels as labels.npz.')
 
 
 def flush_log(collection_id):
     """Flushes log for processed collection."""
     filename = FLAGS.img_to_numpy_logs_dir + '/{}'.format(collection_id)
     #print('Saving to {}'.format(filename))
-    os.system('sudo touch {}'.format(filename))
+    os.system('touch {}'.format(filename))
     print('Converted to numpy: {}'.format(collection_id))
 
 
@@ -163,7 +167,7 @@ def save_pixels_numpy(base_dir, collection_id, X_train, ids):
     """
     path = base_dir + '/{}'.format(collection_id) + '/numpy'
     if not os.path.exists(path):
-        os.system('sudo mkdir {}'.format(path))
+        os.system('mkdir {}'.format(path))
 
     # Save pixels.
     filename = path + '/pixels.npz'
@@ -189,7 +193,7 @@ def save_labels_numpy(base_dir, collection_id, y_train, ids):
     """
     path = base_dir + '/{}'.format(collection_id) + '/numpy'
     if not os.path.exists(path):
-        os.system('sudo mkdir {}'.format(path))
+        os.system('mkdir {}'.format(path))
 
     # Save pixels.
     filename = path + '/labels.npz'
@@ -221,7 +225,14 @@ def collection_to_array(base_dir, collection_id):
     output_array = []
     ids = []
     count = 0
-    for f in os.listdir(collection_folder):
+    img_files_ = os.listdir(collection_folder)
+    img_files = []
+    for x in img_files_:
+        print(x[-4:])
+        if x[-4:] != '.url':
+            img_files.append(x)
+    # Remove files that end with .url
+    for f in img_files:
         path = collection_folder + '/{}'.format(f)
         try:
             image_array = img_to_array(path)
@@ -246,8 +257,9 @@ def main(argv):
     save_pixels_numpy(FLAGS.base_dir, FLAGS.collection_id, X_train, ids)
     print('Converted images to numpy for collection {}'.format(
         FLAGS.collection_id))
-    y_train = load_labels(FLAGS.base_dir, FLAGS.collection_id, ids)
-    save_labels_numpy(FLAGS.base_dir, FLAGS.collection_id, y_train, ids)
+    if FLAGS.save_labels:
+        y_train = load_labels(FLAGS.base_dir, FLAGS.collection_id, ids)
+        save_labels_numpy(FLAGS.base_dir, FLAGS.collection_id, y_train, ids)
     flush_log(FLAGS.collection_id)
     print('Success')
 

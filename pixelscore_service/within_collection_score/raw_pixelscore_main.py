@@ -113,8 +113,7 @@ flags.DEFINE_string(
     'Raw logs.')
 
 # Initialize global hist
-GLOBAL_HIST = np.load(
-    '/mnt/disks/additional-disk/global_hist/global_hist.npz')['arr_0']
+GLOBAL_HIST = np.load(FLAGS.global_hist_path)['arr_0']
 
 # Global smallest pixel count
 MIN_PIXEL_COUNT = np.min(GLOBAL_HIST[np.nonzero(GLOBAL_HIST)])

@@ -93,6 +93,7 @@ def main(argv):
     pool.close()
     pool.join()
     print(results)
+    """
     for collection_id in whitelist:
         print('Converting collection {}'.format(collection_id))
         try:
@@ -101,7 +102,7 @@ def main(argv):
         except:
             print('Unable to compute pixelscores for collection {}, trying next one'.format(
                 collection_id))
-
+    """
     print('Success')
 
 

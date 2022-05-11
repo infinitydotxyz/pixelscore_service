@@ -87,10 +87,6 @@ flags.DEFINE_string(
     'hist_dir',
     '/mnt/disks/additional-disk/histograms',
     'Dir to save histograms.')
-flags.DEFINE_string(
-    'global_hist_path',
-    '/mnt/disks/additional-disk/global_hist/global_hist.npz',
-    'Path to global hist.')
 flags.DEFINE_boolean(
     'use_checkpoint',
     True,
@@ -112,8 +108,8 @@ flags.DEFINE_string(
     '/mnt/disks/additional-disk/raw_logs/tmp',
     'Raw logs.')
 
-# Initialize global hist
-GLOBAL_HIST = np.load(FLAGS.global_hist_path)['arr_0']
+GLOBAL_HIST_PATH = '/mnt/disks/additional-disk/global_hist/global_hist.npz'
+GLOBAL_HIST = np.load(GLOBAL_HIST_PATH)['arr_0']
 
 # Global smallest pixel count
 MIN_PIXEL_COUNT = np.min(GLOBAL_HIST[np.nonzero(GLOBAL_HIST)])
@@ -211,11 +207,11 @@ def save_collection_numpy(base_dir, collection_id, X_train):
     """
     path = base_dir + '/{}'.format(collection_id) + '/numpy'
     if not os.path.exists(path):
-        os.system('sudo mkdir {}'.format(path))
+        os.system('mkdir {}'.format(path))
     filename = path + '/dnn_layers.npz'
     savez_compressed('dnn_layers.npz', X_train)
     print('Saving layers as numpy to {}'.format(filename))
-    os.system('sudo mv dnn_layers.npz {}'.format(filename))
+    os.system('mv dnn_layers.npz {}'.format(filename))
     return True
 
 
@@ -232,7 +228,7 @@ def save_collection_scores(base_dir, collection_id, results_file, df, global_sco
     """
     path = base_dir + '/{}'.format(collection_id) + '/pixelscore'
     if not os.path.exists(path):
-        os.system('sudo mkdir {}'.format(path))
+        os.system('mkdir {}'.format(path))
     if global_score:
         filename_score = path + '/global_raw_pixelscore.csv'
         filename_hist = path + '/global_raw_pixelscore_hist.png'
@@ -494,7 +490,7 @@ def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_c
             H, edges = np.histogramdd(pixel,
                                       bins=(N_BINS_R, N_BINS_G, N_BINS_B),
                                       range=[(0, 255), (0, 255), (0, 255)])
-            # pixels_hist.append(H)
+            pixels_hist.append(H)
 
             # Replace hist by the global hist if we are running global score compute.
             if global_score:
@@ -510,8 +506,11 @@ def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_c
             '/{}/numpy/pixel_counts.npz'.format(collection_id)
         savez_compressed('pixel_counts.npz', X_train)
         print('Saving pixel counts as numpy to {}'.format(filename))
-        os.system('sudo mv pixel_counts.npz {}'.format(filename))
+        os.system('mv pixel_counts.npz {}'.format(filename))
     if save_pixels_hist:
+        folder = FLAGS.hist_dir + '/{}'.format(collection_id)
+        if not os.path.exists(folder):
+            os.system('mkdir {}'.format(folder))
         pixels_hist_ = np.array(pixels_hist).astype('int32')
         filename = FLAGS.hist_dir + '/{}/pixels_hist.npz'.format(collection_id)
         print(pixels_hist_.shape)
@@ -532,7 +531,7 @@ def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_c
     else:
         collection_scores = np.mean(collection_scores, axis=0)
         collection_scores = 1.0 / collection_scores
-    # Now refall that rarity is inversely proportional to frequency.
+    # Now recall that rarity is inversely proportional to frequency.
 
     # Also the global score shoul dbe done without min-max rescaler, since it is global!
     if global_score:
@@ -580,7 +579,7 @@ def get_raw_global_pixelscores_collection(base_dir, collection_id, X_train, ids,
             '/{}/numpy/pixel_counts.npz'.format(collection_id)
         savez_compressed('pixel_counts.npz', X_train)
         print('Saving pixel counts as numpy to {}'.format(filename))
-        os.system('sudo mv pixel_counts.npz {}'.format(filename))
+        os.system('mv pixel_counts.npz {}'.format(filename))
     # Now collection_scores are [224 *224 , n_tokens] and represent count numbers.
     # Aggrerage them
     collection_scores = np.mean(collection_scores, axis=0)

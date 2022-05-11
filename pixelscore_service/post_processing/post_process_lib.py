@@ -317,7 +317,7 @@ def bucketize_scores(base_dir):
     return True
 
 
-def merge_results(base_dir, collection_id):
+def merge_results(base_dir, collection_id, do_sort=True):
     """ Merge global_raw_pixelscore.csv results
 
     Done for all collections at once.
@@ -333,8 +333,8 @@ def merge_results(base_dir, collection_id):
             base_dir + '/{}/pixelscore/global_raw_pixelscore.csv'.format(id))
         all_df = pd.concat([all_df, df])
         print('Merged collection {}'.format(id))
-    print(all_df)
-    all_df.to_csv('merged_global_raw_pixelscore.csv')
+    all_df.sort_values(by = 'pixelScore', ascending=True, inplace=True)
+    all_df.to_csv(FLAGS.merged_scores_file)
 
 def plot_3d_pixel_histogram():
     """Plots 3D histogram of RGB for specific pixel.

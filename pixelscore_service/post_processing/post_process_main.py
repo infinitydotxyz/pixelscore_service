@@ -101,6 +101,8 @@ def main(argv):
     # Scores hist mode is single thresded.
     if FLAGS.mode == 'scores_hist':
         os.system('python3 {}/pixelscore_service/preprocessing/preprocess_lib.py --base_dir={} --mode="scores_hist"'.format(FLAGS.code_path, base_dir))
+    if FLAGS.mode == 'merge_results':
+        os.system('python3 {}/pixelscore_service/preprocessing/preprocess_lib.py --base_dir={} -- scored_collections_whitelist={} --merged_scores_file={} --mode="merge_results"'.format(FLAGS.code_path, base_dir, FLAGS.scored_collections_whitelist, FLAGS.merged_scores_file))
     # Define parallel execution.
     pool = mp.Pool(mp.cpu_count())
     if FLAGS.mode == 'is_pre_reveal':

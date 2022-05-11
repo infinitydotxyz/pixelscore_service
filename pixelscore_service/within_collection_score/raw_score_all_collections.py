@@ -63,8 +63,18 @@ flags.DEFINE_string(
     'hist_dir',
     '/mnt/disks/additional-disk/histograms',
     'Dir to save pixel histograms.')
-
-
+flags.DEFINE_boolean(
+    'save_pixels_hist',
+    False,
+    'Whether to save pixels hist in the process.')
+flags.DEFINE_boolean(
+    'global_score',
+    True,
+    'Whether to apply global score scaling.')
+flags.DEFINE_string(
+    'raw_logs_dir',
+    '/mnt/disks/additional-disk/raw_logs/tmp',
+    'Raw logs.')
 def get_numpy_ready_collections(base_dir, whitelist):
     """Return ids for which numpy already generated."""
     ready_list = []
@@ -104,7 +114,7 @@ def create_results_file(results_dir):
             'corr_rarityScore',
             'corr_rarityRank'])
         df.to_csv('results.csv')
-        os.system('sudo mv results.csv {}'.format(filename))
+        os.system('mv results.csv {}'.format(filename))
     print('File with scoring results stats created {}'.format(filename))
     return filename
 
@@ -113,8 +123,8 @@ def run_process(collection_id, base_dir, results_file):
     """Single process run of getting raw pixel scores function."""
     print('Start computing RAW pixelscores for collection {}'.format(collection_id))
     try:
-        os.system('python3 {}/pixelscore_service/within_collection_score/raw_pixelscore_main.py --collection_id={} --base_dir={} --results_file={} --hist_dir={}'.format(
-            FLAGS.code_path, collection_id, base_dir, results_file, FLAGS.hist_dir))
+        os.system('python3 {}/pixelscore_service/within_collection_score/raw_pixelscore_main.py --collection_id={} --base_dir={} --results_file={} --hist_dir={} --save_pixels_hist={} --global_score={} --raw_logs_dir={}'.format(
+            FLAGS.code_path, collection_id, base_dir, results_file, FLAGS.hist_dir, FLAGS.save_pixels_hist, FLAGS.global_score, FLAGS.raw_logs_dir))
     except:
         print('Unable to compute pixelscores for collection {}, trying next one'.format(
             collection_id))

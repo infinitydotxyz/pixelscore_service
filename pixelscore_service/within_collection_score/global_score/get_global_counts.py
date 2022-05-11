@@ -24,6 +24,11 @@ IMG_WIDTH = 224
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
+    'code_path',
+    '/mnt/disks/ssd/git/pixelscore_service',
+    'Root oath to project with code')
+    
+flags.DEFINE_string(
     'base_dir',
     '/mnt/disks/ssd/data',
     'Local base directory containing images, resized, metadata, etc.')
@@ -86,7 +91,7 @@ def save_global_count(base_dir, whitelist, global_count):
     """Saves global count to dir."""
     filename = base_dir + '/global_count/global_counts.npz'
     savez_compressed('global_counts.npz', global_count)
-    os.system('sudo mv global_counts.npz {}'.format(filename))
+    os.system('mv global_counts.npz {}'.format(filename))
     return True
 
 
@@ -143,8 +148,8 @@ def save_global_hist_shards(global_hist, whitelist_post, shard_id):
     """Saves global hist shard with corresponsing whitelist."""
     shard_path = FLAGS.global_hist_shards_dir + '/{}'.format(shard_id)
     if not os.path.exists(shard_path):
-        os.system('sudo mkdir {}'.format(shard_path))
-        os.system('sudo chmod ugo+rwx {}'.format(shard_path))
+        os.system('mkdir {}'.format(shard_path))
+        os.system('chmod ugo+rwx {}'.format(shard_path))
     filename_hist = FLAGS.global_hist_shards_dir + \
         '/{}/pixels_hist.npz'.format(shard_id)
     np.savez_compressed(filename_hist, global_hist)

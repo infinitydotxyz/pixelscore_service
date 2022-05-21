@@ -71,6 +71,10 @@ flags.DEFINE_boolean(
     'global_score',
     True,
     'Whether to apply global score scaling.')
+flags.DEFINE_boolean(
+    'use_log_scores',
+    False,
+    'Whether to use scores as -log(1+prob).')
 flags.DEFINE_string(
     'raw_logs_dir',
     '/mnt/disks/additional-disk/raw_logs/tmp',
@@ -123,8 +127,8 @@ def run_process(collection_id, base_dir, results_file):
     """Single process run of getting raw pixel scores function."""
     print('Start computing RAW pixelscores for collection {}'.format(collection_id))
     try:
-        os.system('python3 {}/pixelscore_service/within_collection_score/raw_pixelscore_main.py --collection_id={} --base_dir={} --results_file={} --hist_dir={} --save_pixels_hist={} --global_score={} --raw_logs_dir={}'.format(
-            FLAGS.code_path, collection_id, base_dir, results_file, FLAGS.hist_dir, FLAGS.save_pixels_hist, FLAGS.global_score, FLAGS.raw_logs_dir))
+        os.system('python3 {}/pixelscore_service/within_collection_score/raw_pixelscore_main.py --collection_id={} --base_dir={} --results_file={} --hist_dir={} --save_pixels_hist={} --global_score={} --raw_logs_dir={} --use_log_scores={}'.format(
+            FLAGS.code_path, collection_id, base_dir, results_file, FLAGS.hist_dir, FLAGS.save_pixels_hist, FLAGS.global_score, FLAGS.raw_logs_dir, FLAGS.use_log_scores))
     except:
         print('Unable to compute pixelscores for collection {}, trying next one'.format(
             collection_id))

@@ -17,6 +17,7 @@ import scipy
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
+import math
 import os
 import gc
 import sys
@@ -107,19 +108,28 @@ flags.DEFINE_string(
     'raw_logs_dir',
     '/mnt/disks/additional-disk/raw_logs/tmp',
     'Raw logs.')
+flags.DEFINE_boolean(
+    'use_log_scores',
+    False,
+    'Whether to use scores as -log(1+prob).')
 
 GLOBAL_HIST_PATH = '/mnt/disks/additional-disk/global_hist/global_hist.npz'
 GLOBAL_HIST = np.load(GLOBAL_HIST_PATH)['arr_0']
-
-# Global smallest pixel count
-MIN_PIXEL_COUNT = np.min(GLOBAL_HIST[np.nonzero(GLOBAL_HIST)])
-
 
 def get_global_hist(i, j):
     """Quick get global hist."""
     index = i + IMG_HEIGHT + j
     hist = GLOBAL_HIST[index, :, :, :]
     return hist
+
+# Global smallest pixel count
+MIN_PIXEL_COUNT = np.min(GLOBAL_HIST[np.nonzero(GLOBAL_HIST)])
+PIXEL_SUMS = dict()
+# For each pixel (i,j) contains its total count from all bins.
+for i in range(IMG_HEIGHT):
+    for j in range(IMG_WIDTH):
+            PIXEL_SUMS[(i,j)] = np.sum(get_global_hist(i,j))
+
 
 
 def update_results(results_file, stats_dict):
@@ -215,7 +225,7 @@ def save_collection_numpy(base_dir, collection_id, X_train):
     return True
 
 
-def save_collection_scores(base_dir, collection_id, results_file, df, global_score=True):
+def save_collection_scores(base_dir, collection_id, results_file, df, global_score=True, use_log_scores=False):
     """Saves pixel scores for the given collection in .csv.
 
     Args:
@@ -230,8 +240,12 @@ def save_collection_scores(base_dir, collection_id, results_file, df, global_sco
     if not os.path.exists(path):
         os.system('mkdir {}'.format(path))
     if global_score:
-        filename_score = path + '/global_raw_pixelscore.csv'
-        filename_hist = path + '/global_raw_pixelscore_hist.png'
+        if use_log_scores:
+            filename_score = path + '/global_raw_pixelscore_log.csv'
+            filename_hist = path + '/global_raw_pixelscore_log_hist.png'
+        else:
+            filename_score = path + '/global_raw_pixelscore.csv'
+            filename_hist = path + '/global_raw_pixelscore_hist.png'
     else:
         filename_score = path + '/raw_pixelscore.csv'
         filename_hist = path + '/raw_pixelscore_hist.png'
@@ -478,11 +492,12 @@ def get_single_pixel_score(base_dir, collection_id, pixel, H, edges, save_hist=F
     return counts_opt
 
 
-def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_collection_counts=False, save_pixels_hist=False, global_score=True):
+def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_collection_counts=False, save_pixels_hist=False, global_score=True, use_log_scores = False):
     # Score is created as new column in df.
     # For each pixel
     collection_scores = []
     pixels_hist = []
+    pixel_sums = []
     for i in range(IMG_HEIGHT):
         for j in range(IMG_WIDTH):
             pixel = X_train[:, i, j]
@@ -499,6 +514,7 @@ def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_c
             pixel_scores = get_single_pixel_score(
                 base_dir, collection_id, pixel, H, edges)
             collection_scores.append(pixel_scores)
+            pixel_sums.append(PIXEL_SUMS[(i,j)])
             #print('Processed pixel ({}, {}) of (224,224)'.format(i,j))
     if save_collection_counts:
         collection_counts = np.array(collection_scores).astype('int32')
@@ -525,9 +541,16 @@ def get_raw_pixelscores_collection(base_dir, collection_id, X_train, ids, save_c
     # TODO(dstorcheus): check the above.
     collection_scores = np.array(collection_scores)
     if global_score:
-        collection_scores = PIXELSCORE_SCALING_MAX * \
-            MIN_PIXEL_COUNT * 1.0 / collection_scores
-        collection_scores = np.mean(collection_scores, axis=0)
+        if use_log_scores:
+            # These are probability estimates, pixel_sums actually has the same value repeated, so we just take it using the mean.
+            collection_scores = numpy.divide(collection_scores, np.mean(pixel_sums))
+            collection_scores = 1.0 - np.log(1.0 + collection_scores)
+            #collection_scores = -1.0 * np.log(collection_scores)
+            collection_scores = np.mean(collection_scores, axis=0)
+        else:
+            collection_scores = PIXELSCORE_SCALING_MAX * \
+                MIN_PIXEL_COUNT * 1.0 / collection_scores
+            collection_scores = np.mean(collection_scores, axis=0)
     else:
         collection_scores = np.mean(collection_scores, axis=0)
         collection_scores = 1.0 / collection_scores
@@ -603,9 +626,9 @@ def main(argv):
     collection_id = FLAGS.collection_id
     base_dir = FLAGS.base_dir
     X_train, ids = load_collection_numpy(base_dir, collection_id)
-    df = get_raw_pixelscores_collection(base_dir = base_dir, collection_id = collection_id, X_train = X_train, ids = ids, save_collection_counts=FLAGS.save_collection_counts, save_pixels_hist=FLAGS.save_pixels_hist, global_score = FLAGS.global_score)
+    df = get_raw_pixelscores_collection(base_dir = base_dir, collection_id = collection_id, X_train = X_train, ids = ids, save_collection_counts=FLAGS.save_collection_counts, save_pixels_hist=FLAGS.save_pixels_hist, global_score = FLAGS.global_score, use_log_scores = FLAGS.use_log_scores)
     save_collection_scores(
-        FLAGS.base_dir, FLAGS.collection_id, FLAGS.results_file, df, FLAGS.global_score)
+        FLAGS.base_dir, FLAGS.collection_id, FLAGS.results_file, df, FLAGS.global_score, FLAGS.use_log_scores)
     print(
         'Completed Score generation for collection {}'.format(
             FLAGS.collection_id))

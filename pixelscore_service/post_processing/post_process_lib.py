@@ -48,6 +48,12 @@ PIXEL_SCORE_BINS = 100
 # Flag names are globally defined!  So in general, we need to be
 # careful to pick names that are unlikely to be used by other libraries.
 # If there is a conflict, we'll get an error at import time.
+
+# Hardcoded hist edges.
+EDGES = [np.array([0.,  25.5,  51.,  76.5, 102., 127.5, 153., 178.5, 204.,
+                   229.5, 255.]), np.array([0.,  25.5,  51.,  76.5, 102., 127.5, 153., 178.5, 204.,
+                                            229.5, 255.]), np.array([0.,  25.5,  51.,  76.5, 102., 127.5, 153., 178.5, 204.,
+                                                                     229.5, 255.])]
 flags.DEFINE_string(
     'collections_whitelist',
     '/mnt/disks/ssd/pixelscore_service/whitelists_blacklists/global_hist_ready_10_Apr_2022.csv',
@@ -94,13 +100,16 @@ flags.DEFINE_string(
     'File with all scores for all collections merged.')
 flags.DEFINE_string(
     'post_processing_dir',
-    '/mnt/disks/additional-disk/post_processing',
+    '/mnt/disks/additional-disk/post_processing_2',
     'Dir to store post-processing results, analysis, charts.')
 flags.DEFINE_string(
     'global_hist_path',
     '/mnt/disks/additional-disk/global_hist/global_hist.npz',
     'Path to global hist.')
-
+flags.DEFINE_boolean(
+    'use_log_scores',
+    False,
+    'Whether to use scores as -log(1+prob).')
 # Standard image dimensions
 IMG_HEIGHT = 224
 IMG_WIDTH = 224
@@ -290,51 +299,102 @@ def scores_hist(base_dir, collection_id):
     return True
 
 
-def bucketize_scores(base_dir):
+def bucketize_scores(base_dir, merged_scores_file, post_processing_dir):
     """ Bucketize final scores into bins
 
     bins: 1 to 10
     """
 
-    df = pd.read_csv('merged_sorted_global_raw_pixelscore.csv')
+    df = pd.read_csv(merged_scores_file)
     bin_labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     # What quantiles should we select for scores?
-    quantiles = [0.17, 0.34, 0.49, 0.62, 0.73,
-                 0.82, 0.89, 0.94, 0.97, 0.99, 1.0]
+    # Bin 10 = top 1% rarest
+    # Bin 9 = top 3% rarest
+    # Bin 8 = top 5% rarest
+    # Bin 7 = top 7% rarest
+    # Bin 6 = top 10% rarest
+    # Bin 5 = top 15% rarest
+    # Bin 4 = top 25% rarest
+    # Bin 3 = top 40% rarest
+    # Bin 2 = top 65% rarest
+    # Bin 1 = all the rest.
+    quantiles = [0.0, 0.35, 0.60, 0.75, 0.85,
+                 0.90, 0.93, 0.95, 0.97, 0.99, 1.0]
     df['bin_pixelScore'] = pd.qcut(df['pixelScore'],
                                    q=quantiles,
                                    labels=bin_labels)
     print(df.head(100)['bin_pixelScore'])
+    df.to_csv(merged_scores_file)
     # Check hist of that.
     binned_scores = df['bin_pixelScore'].values
-    print(binned_scores)
+    #print(binned_scores)
     fig = plt.hist(binned_scores, bins=10)
     plt.title('Binned pixel score')
     plt.xlabel("pixelscore")
     plt.ylabel("Frequency")
+    plt.savefig(post_processing_dir + '/binned_pixelscore_hist.png', dpi = 512)
     plt.savefig('binned_pixelscore_hist.png')
     print('Binned hist Successfully saved')
+    # Also save the ranges of the bins for further application (try retbins=True).
+    # cuts = pd.qcut(range(5), 2, labels=["good", "medium"], retbins=True)
+    # cuts[1] will give the bin intervals, store them locally.
     return True
 
+def plot_bucketized_hist(base_dir, merged_scores_file, post_processing_dir):
+    """ Plot hist of bucketized pixelscores
+    """
+    from matplotlib.ticker import PercentFormatter
+    df = pd.read_csv(merged_scores_file)
+    # What quantiles should we select for scores?
+    # Bin 10 = top 1% rarest
+    # Bin 9 = top 3% rarest
+    # Bin 8 = top 5% rarest
+    # Bin 7 = top 7% rarest
+    # Bin 6 = top 10% rarest
+    # Bin 5 = top 15% rarest
+    # Bin 4 = top 25% rarest
+    # Bin 3 = top 40% rarest
+    # Bin 2 = top 65% rarest
+    # Bin 1 = all the rest.
+    binned_scores = df['bin_pixelScore'].values
+    fig = plt.hist(binned_scores, weights=np.ones(len(binned_scores)) / len(binned_scores), bins=10)
+    plt.title('Binned Rarity Score')
+    plt.xlabel("Bin Index")
+    plt.ylabel("Frequency")
+    plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
+    plt.xticks([1,2,3,4,5,6,7,8,9,10])
+    plt.savefig(post_processing_dir + '/binned_pixelscore_hist_1.png', dpi = 512)
+    print('Binned hist Successfully saved')
+    # Also save the ranges of the bins for further application (try retbins=True).
+    # cuts = pd.qcut(range(5), 2, labels=["good", "medium"], retbins=True)
+    # cuts[1] will give the bin intervals, store them locally.
+    return True
 
-def merge_results(base_dir, collection_id, do_sort=True):
+def merge_results(base_dir, collection_id, do_sort=True, use_log_scores = False):
     """ Merge global_raw_pixelscore.csv results
 
     Done for all collections at once.
     """
     whitelist = pd.read_csv(FLAGS.scored_collections_whitelist)[
         'collection_id'].values
+    if use_log_scores:
+        filename = '/{}/pixelscore/global_raw_pixelscore_log.csv'
+    else:
+        filename = '/{}/pixelscore/global_raw_pixelscore.csv'
     id = whitelist[0]
     all_df = pd.read_csv(
-        base_dir + '/{}/pixelscore/global_raw_pixelscore.csv'.format(id))
+        base_dir + filename.format(id))
     whitelist = whitelist[1:]
     for id in whitelist:
         df = pd.read_csv(
-            base_dir + '/{}/pixelscore/global_raw_pixelscore.csv'.format(id))
+            base_dir + filename.format(id))
         all_df = pd.concat([all_df, df])
         print('Merged collection {}'.format(id))
-    all_df.sort_values(by = 'pixelScore', ascending=True, inplace=True)
+    all_df.sort_values(by = 'pixelScore', ascending=False, inplace=True)
     all_df.to_csv(FLAGS.merged_scores_file)
+    df_20k = all_df.head(20000)
+    df_20k.sort_values(by = 'pixelScore', ascending=False, inplace=True)
+    df_20k.to_csv(FLAGS.merged_scores_file[:-4]+ '_20k.csv')
 
 def plot_3d_pixel_histogram():
     """Plots 3D histogram of RGB for specific pixel.
@@ -347,14 +407,99 @@ def plot_3d_pixel_histogram():
     hist = get_global_hist(global_hist, i, j)
 
     return True
+
+def plot_rarest_colors(post_processing_dir):
+    """Plots rarest colors based on global hist
     
+    Loads global hist object
+    """
+    # Sum the hist for all pixel positions
+    # global_hist[index, :, :, :]
+    global_hist = np.load(FLAGS.global_hist_path)['arr_0']
+    H = np.mean(global_hist, axis = 0)
+    # Now these are bin frequencies for all individual pixels combined, just shoose top bins colors
+    data = []
+    for x in range(0,10):
+        for y in range(0,10):
+            for z in range(0,10):
+                data.append(((x,y,z),H[x,y,z]))
+    sorted_by_second = sorted(data, reverse = True, key=lambda tup: tup[1])
+    print(sorted_by_second[:100])
+    top_k = sorted_by_second[:100]
+    top_colors = []
+    print(EDGES[0])
+    for item in top_k:
+        grid = item[0]
+        print(grid)
+        x = grid[0]
+        y = grid[1]
+        z = grid[2]
+        r = (EDGES[0][x+1] + EDGES[0][x])/2.0
+        g = (EDGES[0][y+1] + EDGES[0][y])/2.0
+        b = (EDGES[0][z+1] + EDGES[0][z])/2.0
+        top_colors.append([r,g,b])
+    print(top_colors)
+    top_colors_np = np.expand_dims(np.array(top_colors, dtype = np.uint8), axis = 0)
+    print(top_colors_np)
+    #im = Image.fromarray(top_colors_np)
+    #im.save(post_processing_dir + '/top_colors_image.jpeg')
+    #fig = plt.imshow(top_colors_np)
+    #plt.savefig(post_processing_dir + '/top_colors.png', dpi = 512)
+
+    # Make colors into pixel matrix and show
+    #fig = plt.imshow(colors)
+    #plt.savefig(post_processing_dir + '/top_colors.png', dpi = 512)
+
+    #plt.clf()
+    #plt.cla()
+    #del fig
+    bottom_k = sorted_by_second[-10:]
+    bottom_colors = []
+    for item in bottom_k:
+        grid = item[0]
+        print(grid)
+        x = grid[0]
+        y = grid[1]
+        z = grid[2]
+        r = (EDGES[0][x+1] + EDGES[0][x])/2.0
+        g = (EDGES[0][y+1] + EDGES[0][y])/2.0
+        b = (EDGES[0][z+1] + EDGES[0][z])/2.0
+        bottom_colors.append([r,g,b])
+    print(bottom_colors)
+    # Make colors into pixel matrix and show
+    #fig = plt.imshow(colors)
+    #plt.savefig(post_processing_dir + '/bottom_colors.png', dpi = 512)
+    # Fix the proper image alignment.
+    # https://matplotlib.org/3.5.0/tutorials/colors/colors.html
+    # https://www.python-graph-gallery.com/3-control-color-of-barplots
+    # top k Bars
+    height = []
+    bars = []
+    bar_colors_ = []
+    iter = 0
+    for pair in top_k:
+        height.append(pair[1])
+        bars.append('color_{}'.format(iter))
+        r = int(top_colors[iter][0])
+        g = int(top_colors[iter][1])
+        b = int(top_colors[iter][2])
+        hexvalue = '#%02x%02x%02x' % (r, g, b)
+        bar_colors_.append(hexvalue)
+        iter += 1
+    x_pos = np.arange(len(bars))
+    print(bar_colors_)
+    plt.bar(x_pos, height, color=bar_colors_)
+    plt.savefig(post_processing_dir + '/top_colors_bars.png', dpi = 512)
+    return True
+
 def analyze_merged_scores(merged_scores_file, post_processing_dir):
     """Stats analysis of merged scores from all collections."""
 
     # Part 1: Line plot.
-    top_k = 10000
+    low_k = 0
+    top_k = 1000000
     df = pd.read_csv(merged_scores_file)
-    y = df['pixelScore'][:top_k]
+    y = df['pixelScore'][low_k:top_k]
     x = range(len(y))
     # Smoothing to yhat
     #from scipy.signal import savgol_filter
@@ -363,13 +508,67 @@ def analyze_merged_scores(merged_scores_file, post_processing_dir):
     plt.title('Sorted PIXELSCORE chart')
     plt.xlabel("token id")
     plt.ylabel("PIXELSCORE")
-    plt.savefig(post_processing_dir + '/merged_scores_plot.png', dpi = 512)
+    plt.savefig(post_processing_dir + '/log_merged_scores_plot.png', dpi = 512)
 
     #Part 2: Binned histogram.
 
     return True
 
+def plot_rarest_collections(post_processing_dir):
+    """Rarest collections by global rarity score avg over collection nfts."""
+    top_k = 100
+    df = pd.read_csv(FLAGS.merged_scores_file)
+    grouped_df = df.groupby('collectionAddress')
+    mean_df = grouped_df.mean()['pixelScore']
+    mean_df_sorted = mean_df.sort_values(ascending = False)
+    print(mean_df_sorted.head(top_k))
+    top_k_mean_df_sorted = mean_df_sorted.head(top_k)
+    """
+    ids = np.unique(df['collectionAddress'].values)
+    score_to_id = dict()
+    it = 0
+    for id in ids:
+        df_select = df.loc[df['collectionAddress'] == id]['pixelScore'].values
+        score = np.mean(df_select)
+        score_to_id[score] = id
+        it+=1
+        print('Processed collection {} of {}'.format(it,len(ids)))
+    score_to_id_sorted = sorted(score_to_id, reverse = True, key=lambda tup: tup[0])
+    top_score_to_id_sorted = score_to_id_sorted[100]
+    print(top_score_to_id_sorted)
+    """
+    # Plot the bars.
+    height = []
+    bars = []
+    iter = 0
+    for v in top_k_mean_df_sorted.values:
+        height.append(v)
+        bars.append(iter)
+        iter += 1
+    x_pos = np.arange(len(bars))
+    plt.bar(x_pos, height)
+    plt.title('Rarity scores per collection')
+    plt.xlabel("Collection id")
+    plt.ylabel("Rarity")
+    plt.savefig(post_processing_dir + '/top_collections_hist_{}.png'.format(top_k), dpi = 512)
+
+def plot_log():
+    """Simply plots the log function."""
+    x = np.arange(0,1,0.01)
+    y = [-np.log(1+t) for t in x]
+    fig = plt.plot(x, y)
+    plt.title('f(p) = -log(1+p)')
+    plt.xlabel("p")
+    plt.ylabel("f(p)")
+    plt.savefig(FLAGS.post_processing_dir + '/log_plot.png', dpi = 512)
+
 def main(argv):
+    print('Running with the following FLAGS: ')
+    print(FLAGS.mode)
+    print(FLAGS.base_dir)
+    print(FLAGS.merged_scores_file)
+    print(FLAGS.scored_collections_whitelist)
+    print('Use log scores: {}'.format(FLAGS.use_log_scores))
     if FLAGS.collection_id is not None:
         print('Preprocess for collection {}'.format(FLAGS.collection_id))
     if FLAGS.mode == 'scores_hist':
@@ -377,16 +576,29 @@ def main(argv):
         scores_hist(FLAGS.base_dir, FLAGS.collection_id)
     if FLAGS.mode == 'merge_results':
         print('Merge results.')
-        merge_results(FLAGS.base_dir, FLAGS.collection_id)
+        merge_results(FLAGS.base_dir, FLAGS.collection_id, FLAGS.use_log_scores)
     if FLAGS.mode == 'bucketize_scores':
         print('Bucketizing scores.')
-        bucketize_scores(FLAGS.base_dir)
+        bucketize_scores(FLAGS.base_dir, FLAGS.merged_scores_file, FLAGS.post_processing_dir)
     if FLAGS.mode == 'analyze_merged_scores':
         print('Analyzing merged scores.')
         analyze_merged_scores(FLAGS.merged_scores_file, FLAGS.post_processing_dir)
     if FLAGS.mode == 'plot_3d_pixel_histogram':
         print('Plotting 3d pixel histogram.')
         plot_3d_pixel_histogram(FLAGS.post_processing_dir)
+    if FLAGS.mode == 'plot_rarest_colors':
+        print('Plotting rarest pixel colors.')
+        plot_rarest_colors(FLAGS.post_processing_dir)
+    if FLAGS.mode == 'plot_rarest_collections':
+        print('Plotting rarest collections.')
+        plot_rarest_collections(FLAGS.post_processing_dir)
+    if FLAGS.mode == 'plot_log':
+        print('Plotting log.')
+        plot_log()
+    if FLAGS.mode == 'plot_bucketized_hist':
+        print('Plotting bucketized histogram.')
+        plot_bucketized_hist(FLAGS.base_dir, FLAGS.merged_scores_file, FLAGS.post_processing_dir)
+        
     print('Success')
 
 

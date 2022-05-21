@@ -55,7 +55,18 @@ flags.DEFINE_string(
     'code_path',
     '/mnt/disks/ssd/git/pixelscore_service',
     'Root oath to project with code')
-
+flags.DEFINE_string(
+    'scored_collections_whitelist',
+    '/mnt/disks/ssd/pixelscore_service/whitelists_blacklists/scored_ids_11_Apr_2022.csv',
+    'Scored collections.')
+flags.DEFINE_string(
+    'merged_scores_file',
+    '',
+    'File with all scores for all collections merged.')
+flags.DEFINE_boolean(
+    'use_log_scores',
+    False,
+    'Whether to use scores as -log(1+prob).')
 
 def run_process(collection_id, base_dir):
     """Single process run of img to numpy function."""
@@ -100,20 +111,33 @@ def main(argv):
     # print(whitelist)
     # Scores hist mode is single thresded.
     if FLAGS.mode == 'scores_hist':
-        os.system('python3 {}/pixelscore_service/preprocessing/preprocess_lib.py --base_dir={} --mode="scores_hist"'.format(FLAGS.code_path, base_dir))
+        os.system('python3 {}/pixelscore_service/post_processing/post_process_lib.py --base_dir={} --mode="scores_hist"'.format(FLAGS.code_path, base_dir))
     if FLAGS.mode == 'merge_results':
-        os.system('python3 {}/pixelscore_service/preprocessing/preprocess_lib.py --base_dir={} -- scored_collections_whitelist={} --merged_scores_file={} --mode="merge_results"'.format(FLAGS.code_path, base_dir, FLAGS.scored_collections_whitelist, FLAGS.merged_scores_file))
+        os.system('python3 {}/pixelscore_service/post_processing/post_process_lib.py --mode="merge_results" --base_dir={} --scored_collections_whitelist={} --merged_scores_file={} --use_log_scores={}'.format(FLAGS.code_path, base_dir, FLAGS.scored_collections_whitelist, FLAGS.merged_scores_file, FLAGS.use_log_scores))
+    if FLAGS.mode == 'analyze_merged_scores':
+        os.system('python3 {}/pixelscore_service/post_processing/post_process_lib.py --mode="analyze_merged_scores" --base_dir={} --scored_collections_whitelist={} --merged_scores_file={} --use_log_scores={}'.format(FLAGS.code_path, base_dir, FLAGS.scored_collections_whitelist, FLAGS.merged_scores_file, FLAGS.use_log_scores))
+    if FLAGS.mode == 'bucketize_scores':
+        os.system('python3 {}/pixelscore_service/post_processing/post_process_lib.py --mode="bucketize_scores" --base_dir={} --scored_collections_whitelist={} --merged_scores_file={} --use_log_scores={}'.format(FLAGS.code_path, base_dir, FLAGS.scored_collections_whitelist, FLAGS.merged_scores_file, FLAGS.use_log_scores))
+    if FLAGS.mode == 'plot_rarest_colors':
+        os.system('python3 {}/pixelscore_service/post_processing/post_process_lib.py --mode="plot_rarest_colors" --base_dir={} --scored_collections_whitelist={} --merged_scores_file={} --use_log_scores={}'.format(FLAGS.code_path, base_dir, FLAGS.scored_collections_whitelist, FLAGS.merged_scores_file, FLAGS.use_log_scores))
+    if FLAGS.mode == 'plot_rarest_collections':
+        os.system('python3 {}/pixelscore_service/post_processing/post_process_lib.py --mode="plot_rarest_collections" --base_dir={} --scored_collections_whitelist={} --merged_scores_file={} --use_log_scores={}'.format(FLAGS.code_path, base_dir, FLAGS.scored_collections_whitelist, FLAGS.merged_scores_file, FLAGS.use_log_scores))
+    if FLAGS.mode == 'plot_log':
+        os.system('python3 {}/pixelscore_service/post_processing/post_process_lib.py --mode="plot_log" --base_dir={} --scored_collections_whitelist={} --merged_scores_file={} --use_log_scores={}'.format(FLAGS.code_path, base_dir, FLAGS.scored_collections_whitelist, FLAGS.merged_scores_file, FLAGS.use_log_scores))
+    if FLAGS.mode == 'plot_bucketized_hist':
+        os.system('python3 {}/pixelscore_service/post_processing/post_process_lib.py --mode="plot_bucketized_hist" --base_dir={} --scored_collections_whitelist={} --merged_scores_file={} --use_log_scores={}'.format(FLAGS.code_path, base_dir, FLAGS.scored_collections_whitelist, FLAGS.merged_scores_file, FLAGS.use_log_scores))
     # Define parallel execution.
-    pool = mp.Pool(mp.cpu_count())
-    if FLAGS.mode == 'is_pre_reveal':
-        results = [pool.apply_async(run_process, args=(
-            collection_id, base_dir)) for collection_id in whitelist]
-    if FLAGS.mode == 'is_empty':
-        results = [pool.apply_async(run_process_is_empty, args=(
-            collection_id, base_dir)) for collection_id in whitelist]
-    pool.close()
-    pool.join()
-    print(results)
+    if FLAGS.mode == 'is_pre_reveal' or FLAGS.mode == 'is_empty':
+        pool = mp.Pool(mp.cpu_count())
+        if FLAGS.mode == 'is_pre_reveal':
+            results = [pool.apply_async(run_process, args=(
+                collection_id, base_dir)) for collection_id in whitelist]
+        if FLAGS.mode == 'is_empty':
+            results = [pool.apply_async(run_process_is_empty, args=(
+                collection_id, base_dir)) for collection_id in whitelist]
+        pool.close()
+        pool.join()
+        print(results)
     print('Success')
 
 

@@ -97,73 +97,110 @@ The histogram of pixelscores is available in <base_dir>/<collection_id>/pixelsco
 ## Command shortcuts for convenience
 
 ### Source venv
-```
+```sh
 source /mnt/disks/ssd/pixelscore_service/pixelscore_service/bin/activate
 ```
 ### Convert to numpy
-```
+```sh
 python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/convert_all_collections_to_numpy.py --base_dir=/mnt/disks/additional-disk/data --code_path=/mnt/disks/ssd/git/pixelscore_service --use_whitelist=False --img_to_numpy_logs_dir=/mnt/disks/additional-disk/raw_logs/tmp_preprocess/img_to_numpy_2
 ```
 with pm2
-```
+```sh
 pm2 start /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/convert_all_collections_to_numpy.py --name convert_all_collections_to_numpy.py --interpreter=python3 --no-autorestart -- --base_dir=/mnt/disks/additional-disk/data --code_path=/mnt/disks/ssd/git/pixelscore_service --use_whitelist=False --img_to_numpy_logs_dir=/mnt/disks/additional-disk/raw_logs/tmp_preprocess/img_to_numpy_2
 ```
 ### Check is_empty
-```
-python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/preprocessing/preprocess_main.py --base_dir=/mnt/disks/additional-disk/data --mode="is_empty" --use_whitelist=False --is_empty_logs_dir="/mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_empty_2"
+```sh
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/preprocessing/preprocess_main.py --base_dir=/mnt/disks/additional-disk/data --mode="is_empty" --use_whitelist=False --is_empty_logs_dir=/mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_empty_2
 ```
 with pm2
-```
-pm2 start /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/preprocessing/preprocess_main.py --name check_is_empty --interpreter=python3 --no-autorestart -- --base_dir=/mnt/disks/additional-disk/data --mode="is_empty" --use_whitelist=False --is_empty_logs_dir="/mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_empty_2"
+```sh
+pm2 start /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/preprocessing/preprocess_main.py --name check_is_empty --interpreter=python3 --no-autorestart -- --base_dir=/mnt/disks/additional-disk/data --mode="is_empty" --use_whitelist=False --is_empty_logs_dir=/mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_empty_2
 ```
 ### Check is_pre_reveal
 
+```sh
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/preprocessing/preprocess_main.py --base_dir=/mnt/disks/additional-disk/data --use_whitelist=False --mode="is_pre_reveal" --pre_reveal_logs_dir=/mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_pre_reveal_2
 ```
-python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/preprocessing/preprocess_main.py --base_dir=/mnt/disks/additional-disk/data --use_whitelist=False --mode="is_pre_reveal" --pre_reveal_logs_dir="/mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_pre_reveal_2"
-``` I am
 with pm2
-```
-pm2 start /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/preprocessing/preprocess_main.py --name check_is_pre_reveal --interpreter=python3 --no-autorestart -- --base_dir=/mnt/disks/additional-disk/data --use_whitelist=False --mode="is_pre_reveal" --pre_reveal_logs_dir="/mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_pre_reveal_2"
+```sh
+pm2 start /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/preprocessing/preprocess_main.py --name check_is_pre_reveal --interpreter=python3 --no-autorestart -- --base_dir=/mnt/disks/additional-disk/data --use_whitelist=False --mode="is_pre_reveal" --pre_reveal_logs_dir=/mnt/disks/additional-disk/raw_logs/tmp_preprocess/is_pre_reveal_2
 ```
 ### Get pixel histograms (for each collection)
 Note, the histograms are saved for each collection separately, so they don't need to be re-computed for old collections.
-```
-python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/raw_score_all_collections.py --base_dir=/mnt/disks/additional-disk/data --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist="/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_ready_5_May_2022.csv" --save_pixels_hist=True --global_score=False --hist_dir=/mnt/disks/additional-disk/histograms
+```sh
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/raw_score_all_collections.py --base_dir=/mnt/disks/additional-disk/data --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_ready_5_May_2022.csv --save_pixels_hist=True --global_score=False --hist_dir=/mnt/disks/additional-disk/histograms
 ```
 with pm2
-```
-pm2 start /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/raw_score_all_collections.py --name compute_collection_hist --interpreter=python3 --no-autorestart -- --base_dir=/mnt/disks/additional-disk/data --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist="/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_ready_5_May_2022.csv" --save_pixels_hist=True --global_score=False --hist_dir=/mnt/disks/additional-disk/histograms
+```sh
+pm2 start /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/raw_score_all_collections.py --name compute_collection_hist --interpreter=python3 --no-autorestart -- --base_dir=/mnt/disks/additional-disk/data --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_ready_5_May_2022.csv --save_pixels_hist=True --global_score=False --hist_dir=/mnt/disks/additional-disk/histograms
 ```
 ### Get global histogram
 
 Don't forget to merge any old collection ids and new ids into one whitelist.
-```
-python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/global_score/get_global_counts.py --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist="/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_merged_8_May_2022.csv" --hist_dir=/mnt/disks/additional-disk/histograms --global_hist_dir=/mnt/disks/additional-disk/global_hist_2 --global_hist_shards_dir=/mnt/disks/additional-disk/global_histograms/shards_2
+```sh
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/global_score/get_global_counts.py --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_merged_8_May_2022.csv --hist_dir=/mnt/disks/additional-disk/histograms --global_hist_dir=/mnt/disks/additional-disk/global_hist_2 --global_hist_shards_dir=/mnt/disks/additional-disk/global_histograms/shards_2
 ```
 
 with pm2
-```
-pm2 start /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/global_score/get_global_counts.py --name get_global_hist --interpreter=python3 --no-autorestart -- --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist="/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_merged_8_May_2022.csv" --hist_dir=/mnt/disks/additional-disk/histograms --global_hist_dir=/mnt/disks/additional-disk/global_hist_2 --global_hist_shards_dir=/mnt/disks/additional-disk/global_histograms/shards_2
+```sh
+pm2 start /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/global_score/get_global_counts.py --name get_global_hist --interpreter=python3 --no-autorestart -- --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_merged_8_May_2022.csv --hist_dir=/mnt/disks/additional-disk/histograms --global_hist_dir=/mnt/disks/additional-disk/global_hist_2 --global_hist_shards_dir=/mnt/disks/additional-disk/global_histograms/shards_2
 ```
 ### Compute global scores using global histogram
 
-```
-python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/raw_score_all_collections.py --base_dir=/mnt/disks/additional-disk/data --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist="/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_merged_8_May_2022.csv" --save_pixels_hist=False --global_score=True --hist_dir=/mnt/disks/additional-disk/histograms --raw_logs_dir="/mnt/disks/additional-disk/raw_logs/tmp_2"
+```sh
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/raw_score_all_collections.py --base_dir=/mnt/disks/additional-disk/data --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_merged_8_May_2022.csv --save_pixels_hist=False --global_score=True --hist_dir=/mnt/disks/additional-disk/histograms --raw_logs_dir=/mnt/disks/additional-disk/raw_logs/tmp_2
 ```
 with pm2
-```
-pm2 start /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/raw_score_all_collections.py --name raw_score_all_collections --interpreter=python3 --no-autorestart -- --base_dir=/mnt/disks/additional-disk/data --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist="/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_merged_8_May_2022.csv" --save_pixels_hist=False --global_score=True --hist_dir=/mnt/disks/additional-disk/histograms --raw_logs_dir="/mnt/disks/additional-disk/raw_logs/tmp_2"
+```sh
+pm2 start /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/raw_score_all_collections.py --name raw_score_all_collections --interpreter=python3 --no-autorestart -- --base_dir=/mnt/disks/additional-disk/data --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_merged_8_May_2022.csv --save_pixels_hist=False --global_score=True --hist_dir=/mnt/disks/additional-disk/histograms --raw_logs_dir=/mnt/disks/additional-disk/raw_logs/tmp_2
 ```
 
 ### Merge scores into one csv
-```
-python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_lib.py --mode="merge_scores" --base_dir=/mnt/disks/additional-disk/data -- scored_collections_whitelist="/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/scored_10_May_2022.csv" --merged_scores_file="/mnt/disks/additional-disk/merged_scores/merged_scores_10_May_2022.csv"
+```sh
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_main.py --mode="merge_results" --code_path=/mnt/disks/ssd/git/pixelscore_service --base_dir=/mnt/disks/additional-disk/data --scored_collections_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/scored_10_May_2022.csv --merged_scores_file=/mnt/disks/additional-disk/merged_scores/merged_scores_10_May_2022.csv
 ```
 
 ### Analyze merged scores
-```
+```sh
 python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_lib.py --mode="analyze_merged_scores"
 ```
 
 ### Some temp logs for scoring results can be found here:
 /mnt/disks/ssd/pixelscore_service/within_collection_score/scoring_results/1652105068_results.csv
+
+### Other (e.g. use_log_scores).
+### Log scores.
+pm2 start /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/within_collection_score/raw_score_all_collections.py --name log_raw_score_all_collections --interpreter=python3 --no-autorestart -- --base_dir=/mnt/disks/additional-disk/data --code_path=/mnt/disks/ssd/git/pixelscore_service --collection_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/global_hist_ready_merged_8_May_2022.csv --save_pixels_hist=False --global_score=True --hist_dir=/mnt/disks/additional-disk/histograms --raw_logs_dir=/mnt/disks/additional-disk/raw_logs/tmp_3 --use_log_scores=True
+
+### Merge log scores.
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_main.py --mode="merge_results" --code_path=/mnt/disks/ssd/git/pixelscore_service --base_dir=/mnt/disks/additional-disk/data --scored_collections_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/scored_10_May_2022.csv --merged_scores_file=/mnt/disks/additional-disk/merged_scores/log_merged_scores_10_May_2022.csv --use_log_scores=True
+
+### Analyze merged log scores.
+```sh
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_main.py --mode="analyze_merged_scores" --code_path=/mnt/disks/ssd/git/pixelscore_service --base_dir=/mnt/disks/additional-disk/data --scored_collections_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/scored_10_May_2022.csv --merged_scores_file=/mnt/disks/additional-disk/merged_scores/log_merged_scores_10_May_2022.csv --use_log_scores=True
+```
+
+### Bucketize (bin) merged log scores.
+```sh
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_main.py --mode="bucketize_scores" --code_path=/mnt/disks/ssd/git/pixelscore_service --base_dir=/mnt/disks/additional-disk/data --scored_collections_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/scored_10_May_2022.csv --merged_scores_file=/mnt/disks/additional-disk/merged_scores/log_merged_scores_10_May_2022.csv --use_log_scores=True
+```
+
+### Plot Rarest Colors.
+```sh
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_main.py --mode="plot_rarest_colors" --code_path=/mnt/disks/ssd/git/pixelscore_service --base_dir=/mnt/disks/additional-disk/data --scored_collections_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/scored_10_May_2022.csv --merged_scores_file=/mnt/disks/additional-disk/merged_scores/log_merged_scores_10_May_2022.csv --use_log_scores=True
+```
+
+### Plot Log.
+```sh
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_main.py --mode="plot_log" --code_path=/mnt/disks/ssd/git/pixelscore_service --base_dir=/mnt/disks/additional-disk/data --scored_collections_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/scored_10_May_2022.csv --merged_scores_file=/mnt/disks/additional-disk/merged_scores/log_merged_scores_10_May_2022.csv --use_log_scores=True
+```
+
+### Plot bucketized hist.
+```sh
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_main.py --mode="plot_bucketized_hist" --code_path=/mnt/disks/ssd/git/pixelscore_service --base_dir=/mnt/disks/additional-disk/data --scored_collections_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/scored_10_May_2022.csv --merged_scores_file=/mnt/disks/additional-disk/merged_scores/log_merged_scores_10_May_2022.csv --use_log_scores=True
+```
+
+### Plot Rarest Collections.
+```sh
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_main.py --mode="plot_rarest_collections" --code_path=/mnt/disks/ssd/git/pixelscore_service --base_dir=/mnt/disks/additional-disk/data --scored_collections_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/scored_10_May_2022.csv --merged_scores_file=/mnt/disks/additional-disk/merged_scores/log_merged_scores_10_May_2022.csv --use_log_scores=True
+```

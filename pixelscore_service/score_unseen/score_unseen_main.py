@@ -2,6 +2,23 @@
 
 Use case:
 
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/score_unseen/score_unseen_main.py
+--collection_id="debug_0x3fe7c1cd3a005388341458f9402fd2c7e0491a95"
+--code_path=/mnt/disks/ssd/git/pixelscore_service
+--base_dir=/mnt/disks/additional-disk/data
+
+Outputs the scores in .csv file in:
+<base_dir>/<collection_id>/pixelscore/unseen_global_raw_pixelscore_log.csv
+
+main columns:
+pixelScore: 0.9935353
+bin_pixelScore: 10
+readable_bin_pixelScore: 'top 1% rarest'
+
+All columns:
+['collectionAddress', 'tokenId',
+'pixelScore', 'pixelScoreRank', 'rarityScore', 'rarityRank', 'imageUrl',
+'bin_pixelScore', 'readable_bin_pixelScore']
 
 """
 import os

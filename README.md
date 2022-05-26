@@ -207,5 +207,5 @@ python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing
 
 ## Score unseen colelctions using global histogram previously computed and log pixelscore bins.
 ```sh
-python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/score_unseen/score_unseen_main.py --collection_id="debug_0x3fe7c1cd3a005388341458f9402fd2c7e0491a95" --code_path=/mnt/disks/ssd/git/pixelscore_service --base_dir=/mnt/disks/additional-disk/data --score_unseen_logs=/mnt/disks/additional-disk/raw_logs/score_unseen --hist_dir=/mnt/disks/additional-disk/histograms
+python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/score_unseen/score_unseen_main.py --collection_id="debug_0x3fe7c1cd3a005388341458f9402fd2c7e0491a95" --code_path=/mnt/disks/ssd/git/pixelscore_service --base_dir=/mnt/disks/additional-disk/data
 ```

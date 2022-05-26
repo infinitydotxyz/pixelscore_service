@@ -78,7 +78,7 @@ readable_bin_pixelscore[5] = 'top 15% rarest'
 readable_bin_pixelscore[4] = 'top 25% rarest'
 readable_bin_pixelscore[3] = 'top 40% rarest'
 readable_bin_pixelscore[2] = 'top 65% rarest'
-readable_bin_pixelscore[1] = 'less that 65% rarest'
+readable_bin_pixelscore[1] = 'less than 65% rarest'
 
 def create_results_file(results_dir):
     """Makes empty results file for the current scoring round.

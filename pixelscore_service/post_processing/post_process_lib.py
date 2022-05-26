@@ -320,9 +320,14 @@ def bucketize_scores(base_dir, merged_scores_file, post_processing_dir):
     # Bin 1 = all the rest.
     quantiles = [0.0, 0.35, 0.60, 0.75, 0.85,
                  0.90, 0.93, 0.95, 0.97, 0.99, 1.0]
-    df['bin_pixelScore'] = pd.qcut(df['pixelScore'],
+    df['bin_pixelScore'], bins = pd.qcut(df['pixelScore'],
                                    q=quantiles,
-                                   labels=bin_labels)
+                                   labels=bin_labels,
+                                   retbins = True)
+    print(bins)
+    filename = post_processing_dir + '/pixelscore_bins/pixelscore_bins.npz'
+    savez_compressed(filename, bins)
+    sys.exit()
     print(df.head(100)['bin_pixelScore'])
     df.to_csv(merged_scores_file)
     # Check hist of that.

@@ -180,7 +180,7 @@ python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing
 python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_main.py --mode="analyze_merged_scores" --code_path=/mnt/disks/ssd/git/pixelscore_service --base_dir=/mnt/disks/additional-disk/data --scored_collections_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/scored_10_May_2022.csv --merged_scores_file=/mnt/disks/additional-disk/merged_scores/log_merged_scores_10_May_2022.csv --use_log_scores=True
 ```
 
-### Bucketize (bin) merged log scores.
+### Bucketize (binarize, get binned pixelscore) merged log scores.
 ```sh
 python3 /mnt/disks/ssd/git/pixelscore_service/pixelscore_service/post_processing/post_process_main.py --mode="bucketize_scores" --code_path=/mnt/disks/ssd/git/pixelscore_service --base_dir=/mnt/disks/additional-disk/data --scored_collections_whitelist=/mnt/disks/ssd/git/pixelscore_service/pixelscore_service/whitelists_blacklists/scored_10_May_2022.csv --merged_scores_file=/mnt/disks/additional-disk/merged_scores/log_merged_scores_10_May_2022.csv --use_log_scores=True
 ```

@@ -112,6 +112,10 @@ flags.DEFINE_boolean(
     'use_log_scores',
     False,
     'Whether to use scores as -log(1+prob).')
+flags.DEFINE_boolean(
+    'score_unseen',
+    False,
+    'Whether to rank unseen out-of-sample colelctin or not.')
 
 GLOBAL_HIST_PATH = '/mnt/disks/additional-disk/global_hist/global_hist.npz'
 GLOBAL_HIST = np.load(GLOBAL_HIST_PATH)['arr_0']
@@ -225,7 +229,7 @@ def save_collection_numpy(base_dir, collection_id, X_train):
     return True
 
 
-def save_collection_scores(base_dir, collection_id, results_file, df, global_score=True, use_log_scores=False):
+def save_collection_scores(base_dir, collection_id, results_file, df, global_score=True, use_log_scores=False, score_unseen=False):
     """Saves pixel scores for the given collection in .csv.
 
     Args:
@@ -241,11 +245,19 @@ def save_collection_scores(base_dir, collection_id, results_file, df, global_sco
         os.system('mkdir {}'.format(path))
     if global_score:
         if use_log_scores:
-            filename_score = path + '/global_raw_pixelscore_log.csv'
-            filename_hist = path + '/global_raw_pixelscore_log_hist.png'
+            if score_unseen:
+                filename_score = path + '/unseen_global_raw_pixelscore_log.csv'
+                filename_hist = path + '/unseen_global_raw_pixelscore_log_hist.png'
+            else:
+                filename_score = path + '/global_raw_pixelscore_log.csv'
+                filename_hist = path + '/global_raw_pixelscore_log_hist.png'
         else:
-            filename_score = path + '/global_raw_pixelscore.csv'
-            filename_hist = path + '/global_raw_pixelscore_hist.png'
+            if score_unseen:
+                filename_score = path + '/unseen_global_raw_pixelscore.csv'
+                filename_hist = path + '/unseen_global_raw_pixelscore_hist.png'
+            else:
+                filename_score = path + '/global_raw_pixelscore.csv'
+                filename_hist = path + '/global_raw_pixelscore_hist.png'
     else:
         filename_score = path + '/raw_pixelscore.csv'
         filename_hist = path + '/raw_pixelscore_hist.png'
@@ -628,7 +640,7 @@ def main(argv):
     X_train, ids = load_collection_numpy(base_dir, collection_id)
     df = get_raw_pixelscores_collection(base_dir = base_dir, collection_id = collection_id, X_train = X_train, ids = ids, save_collection_counts=FLAGS.save_collection_counts, save_pixels_hist=FLAGS.save_pixels_hist, global_score = FLAGS.global_score, use_log_scores = FLAGS.use_log_scores)
     save_collection_scores(
-        FLAGS.base_dir, FLAGS.collection_id, FLAGS.results_file, df, FLAGS.global_score, FLAGS.use_log_scores)
+        FLAGS.base_dir, FLAGS.collection_id, FLAGS.results_file, df, FLAGS.global_score, FLAGS.use_log_scores, FLAGS.score_unseen)
     print(
         'Completed Score generation for collection {}'.format(
             FLAGS.collection_id))

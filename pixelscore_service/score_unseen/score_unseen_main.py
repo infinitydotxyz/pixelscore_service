@@ -20,7 +20,7 @@ FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
     'collection_id',
-    '0x9a534628b4062e123ce7ee2222ec20b86e16ca8f',
+    'debug_0x3fe7c1cd3a005388341458f9402fd2c7e0491a95',
     'Collection id.')
 flags.DEFINE_string(
     'base_dir',
@@ -46,6 +46,22 @@ flags.DEFINE_string(
     'hist_dir',
     '/mnt/disks/additional-disk/histograms',
     'Dir to save pixel histograms.')
+flags.DEFINE_string(
+    'post_processing_dir',
+    '/mnt/disks/additional-disk/post_processing_2',
+    'Dir to store post-processing results, analysis, charts.')
+
+readable_bin_pixelscore = dict()
+readable_bin_pixelscore[10] = 'top 1% rarest'
+readable_bin_pixelscore[9] = 'top 3% rarest'
+readable_bin_pixelscore[8] = 'top 5% rarest'
+readable_bin_pixelscore[7] = 'top 7% rarest'
+readable_bin_pixelscore[6] = 'top 10% rarest'
+readable_bin_pixelscore[5] = 'top 15% rarest'
+readable_bin_pixelscore[4] = 'top 25% rarest'
+readable_bin_pixelscore[3] = 'top 40% rarest'
+readable_bin_pixelscore[2] = 'top 65% rarest'
+readable_bin_pixelscore[1] = 'less that 65% rarest'
 
 def create_results_file(results_dir):
     """Makes empty results file for the current scoring round.
@@ -75,17 +91,17 @@ def create_results_file(results_dir):
     print('File with scoring results stats created {}'.format(filename))
     return filename
 
-def make_logdir(mode):
+def make_logs(mode):
     """Makes proper log dir, separate folder per day."""
     today = str(datetime.date.today())
     if mode == 'img_to_numpy':
-        logdir = FLAGS.score_unseen_logdir + '/img_to_numpy/' + today
+        logdir = FLAGS.score_unseen_logs + '/img_to_numpy/' + today
     if mode == 'raw_pixelscore_main':
-        logdir = FLAGS.score_unseen_logdir + '/raw_pixelscore_main/' + today
+        logdir = FLAGS.score_unseen_logs + '/raw_pixelscore_main/' + today
     if mode == 'scoring_results':
-        logdir = FLAGS.score_unseen_logdir + '/scoring_results/' + today
+        logdir = FLAGS.score_unseen_logs + '/scoring_results/' + today
     if not os.path.exists(logdir):
-        os.run('mkdir ' + logdir)
+        os.system('mkdir ' + logdir)
     return logdir
 
 def binned_pixelscore_unseen(base_dir, collection_id):
@@ -110,8 +126,10 @@ def binned_pixelscore_unseen(base_dir, collection_id):
                                    bins=bins,
                                    labels=bin_labels,
                                    retbins = True)
-    print(bins)
-    sys.exit()
+    readable_bins = []
+    for i in df['bin_pixelScore'].values:
+        readable_bins.append(readable_bin_pixelscore[i])
+    df['readable_bin_pixelScore'] = readable_bins
     df.to_csv(filename_score)
     return True
     
@@ -120,28 +138,31 @@ def binned_pixelscore_unseen(base_dir, collection_id):
 def main(argv):
     base_dir = FLAGS.base_dir
     collection_id = FLAGS.collection_id
+
     # Convert collection to numpy (if not converted yet)
     print('START convert img to numpy for collection {}'.format(collection_id))
-    img_to_numpy_logs_dir = make_logdir(mode = 'img_to_numpy')
-    cmd='python3 {}/pixelscore_service/within_collection_score/img_to_numpy.py " \
+    img_to_numpy_logs_dir = make_logs(mode = 'img_to_numpy')
+    cmd="python3 {}/pixelscore_service/within_collection_score/img_to_numpy.py " \
         "--collection_id={} " \
         "--base_dir={} " \
-        "--img_to_numpy_logs_dir={}'.format(
+        "--img_to_numpy_logs_dir={}".format(
             FLAGS.code_path,
             collection_id,
             base_dir,
             img_to_numpy_logs_dir)
-    os.run(cmd)
+    os.system(cmd)
     print('FINISH convert img to numpy for collection {}'.format(collection_id))
-    # Data cleaning?
+    # Data cleaning TODO
+
     # Compute raw scores.
     print('START computing pixelscores for collection {}'.format(collection_id))
-    results_file = create_results_file(make_logdir(mode = 'scoring_results'))
-    raw_logs_dir = make_logdir(mode = 'raw_pixelscore_main')
+    results_file = create_results_file(make_logs(mode = 'scoring_results'))
+    raw_logs_dir = make_logs(mode = 'raw_pixelscore_main')
     save_pixels_hist = False
     global_score = True
     use_log_scores = True
-    cmd='python3 {}/pixelscore_service/within_collection_score/raw_pixelscore_main.py " \
+    score_unseen = True
+    cmd="python3 {}/pixelscore_service/within_collection_score/raw_pixelscore_main.py " \
         "--collection_id={} " \
         "--base_dir={} " \
         "--results_file={} " \
@@ -149,7 +170,8 @@ def main(argv):
         "--save_pixels_hist={} " \
         "--global_score={} " \
         "--raw_logs_dir={} " \
-        "--use_log_scores={}'.format(
+        "--use_log_scores={} " \
+        "--score_unseen={}".format(
             FLAGS.code_path,
             collection_id,
             base_dir,
@@ -158,13 +180,16 @@ def main(argv):
             save_pixels_hist,
             global_score,
             raw_logs_dir,
-            use_log_scores)
-    os.run(cmd)
+            use_log_scores,
+            score_unseen)
+    os.system(cmd)
     print('FINISH computing pixelscores for collection {}'.format(collection_id))
+
     # Compute binned pixel scores.
     print('START computing binned pixelscores for collection {}'.format(collection_id))
     binned_pixelscore_unseen(base_dir, collection_id)
     print('FINISH computing binned pixelscores for collection {}'.format(collection_id))
     print('SUCCESS')
+
 if __name__ == '__main__':
     app.run(main)
